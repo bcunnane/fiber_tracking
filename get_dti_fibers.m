@@ -15,13 +15,17 @@ image = data(series).m(:,:,slice,frame);
 eigen_val = squeeze(data(series).dti_val(:,:,slice,:));
 eigen_vec = squeeze(data(series).dti_vec(:,:,slice,:,:));
 
-% %analyze
-% rois = get_rois(image, NUM_ROIS);  %select 4 points surrounding MG muscle
-% masks = get_masks(rois, eigen_val);
-fibers = get_fibers(eigen_vec, masks);
+%analyze
+rois = get_rois(image, NUM_ROIS);  %select 4 points surrounding MG muscle
+masks = get_masks(rois);
+for n = size(masks,3):-1:1
+    c = regionprops(masks(:,:,n),'centroid');
+    centroids(n,:) = [c.Centroid];
+end
+masks = apply_FA_filter(masks,eigen_val);
+fiber_dirs = get_fiber_dirs(eigen_vec, masks);
+fibers = get_fiber_coords(fiber_dirs, centroids, rois);
 
-% test
-% examine_voxels(eigen_vec, masks);
 
 %display
 figure('Name','DTI Fibers','NumberTitle','off')
@@ -31,37 +35,6 @@ subplot(1,3,2)
 show_masks(image, masks)
 subplot(1,3,3)
 show_fibers(image, fibers)
-
-function examine_voxels(eigen_vec, masks)
-% use only the lead eiven vector (3rd column)
-eigen_vec = squeeze(eigen_vec(:,:,:,3));
-
-for n = 1:size(masks,3)
-    % get centoid of large ROI
-    c = regionprops(masks(:,:,n),'centroid');
-    centroid = [c.Centroid];
-    centroid = round(centroid);
-    
-    % get eigen vector of small 5x5 ROIs at centroids
-    xpix = [centroid(1)-2 : centroid(1)+2];
-    ypix = [centroid(2)-2 : centroid(2)+2];
-    ev_x = eigen_vec(xpix, ypix, 1);
-    ev_y = eigen_vec(xpix, ypix, 2);
-    ev_z = eigen_vec(xpix, ypix, 3);
-    
-%     ev_x = round(ev_x,2);
-%     ev_y = round(ev_y,2);
-%     ev_z = round(ev_z,2);
-%     disp(table(ev_x,ev_y,ev_z))
-    
-    mean_ev_x(n,:) = round(mean(abs(ev_x(:))), 2);
-    mean_ev_y(n,:) = round(mean(abs(ev_y(:))), 2);
-    mean_ev_z(n,:) = round(mean(abs(ev_z(:))), 2);
-    
-
-end
-disp(table(mean_ev_x, mean_ev_y, mean_ev_z))
-end
 
     
 function rois = get_rois(image,num_rois)
@@ -94,10 +67,20 @@ end
 end
 
 
-function masks = get_masks(rois,eigen_vals)
+function masks = get_masks(rois)
 % returns logical array mask based on each regions of interest and 
-% fractional anisotropy (FA) threshold
 %   expects ROIs matrix is [x, y, n] where n is the region number
+
+% get region masks
+for n = size(rois,3):-1:1
+    masks(:,:,n) = poly2mask(rois(:,1,n), rois(:,2,n),256,256);
+    masks(:,:,n) = bwmorph(masks(:,:,n),'erode'); %remove pix from edges
+end
+end
+
+
+function masks = apply_FA_filter(masks, eigen_vals)
+% Applies fractional anisotropy (FA) threshold filter to region mask
 %   expects eigen_value (ev) matrix is [num_pix, num_pix, 3 evs]
 
 % get FA filter
@@ -113,20 +96,14 @@ fa_vals = sqrt(numerator ./ denominator);
 
 fa_filter = fa_vals > FA_THRESHOLD;
 
-% get region masks
-for n = size(rois,3):-1:1
-    masks(:,:,n) = poly2mask(rois(:,1,n), rois(:,2,n),256,256);
-    masks(:,:,n) = bwmorph(masks(:,:,n),'erode'); %remove pix from edges
-end
-
 % combine region masks & FA filter
-for n = size(rois,3):-1:1
+for n = size(masks,3):-1:1
     masks(:,:,n) = masks(:,:,n) .* fa_filter;
 end
 end
 
 
-function fibers = get_fibers(eigen_vec, masks)
+function fiber_dirs = get_fiber_dirs(eigen_vec, masks)
 % determines fiber direction as average direction in mask region
 %   assumes eigen vector matrix is:
 %   x1   x2   x3
@@ -146,20 +123,33 @@ for n = size(masks,3):-1:1
     xs(opp_sign) = xs(opp_sign) .* -1;
     
     fiber_dirs(n,:) = [mean(xs), mean(ys)];
+end
+end
+
+
+function fibers = get_fiber_coords(fiber_dirs, centroids, rois)
+% calculates muscle fiber endpoint coordinates
+%   Normalizes the fiber direction based on largest value
+%   Generates a long fiber line for each ROI
+%   Intersection of long fiber line and ROI boundary is determined
+%   Note: input and output coords have top-left origins (pixel default)
+NUM_PIX = 256;
+
+for n = size(fiber_dirs,1):-1:1
+    % create long fiber line
     fiber_dirs(n,:) = fiber_dirs(n,:) ./ max(abs(fiber_dirs(n,:))); %normalize
+    fiber_line(2,:) = centroids(n,:) + fiber_dirs(n,:) .* NUM_PIX;
+    fiber_line(1,:) = centroids(n,:) - fiber_dirs(n,:) .* NUM_PIX;
     
-    % extrapolate fiber
-    c = regionprops(masks(:,:,n),'centroid', 'EquivDiameter');
-    centroid = [c.Centroid];
-    radius = 0.8 * (c.EquivDiameter / 2); % 0.8r prevents fiber leaving ROI
-    fibers(n*2,:) = centroid + fiber_dirs(n,:) .* radius;
-    fibers(n*2-1,:) = centroid - fiber_dirs(n,:) .* radius;
+    % get intercept and save as fiber coordinates
+    [x,y] = polyxpoly(rois(:,1,n),rois(:,2,n),fiber_line(:,1),fiber_line(:,2));
+    fibers(2*n-1:2*n,1:2) = [x,y];
 end
 end
 
 
 function show_rois(image,rois)
-%SHOW_REGIONS displays regions of interest on image
+% displays regions of interest on image
 %   expects ROI matrix is [x y n] where n is the region number
 
 imshow(image,[])
@@ -172,7 +162,7 @@ end
 
 
 function show_masks(image, masks)
-% display masks on image
+% displays masks on image
 %   expects mask matrix is [x y n] where n is the region number
 num_masks = size(masks,3);
 imshow(image,[])
