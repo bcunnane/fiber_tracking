@@ -2,18 +2,13 @@
 % Determines muscle fibers from MR diffusion data via average direction
 % within a region of interest (ROI)
 
-%load('Results.mat')
-
-
-%initialize
+%load('DTI.mat')
 NUM_ROIS = 3;
+slice = 8; %set so location is same as dynamic
+%image = dynamic(1).M(:,:,1);
+eigen_val = squeeze(DTI_data.DTI_eigenvalue(:,:,slice,:));
+eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,slice,:,:));
 
-series = 1;
-slice = 1;
-frame = 1;
-image = data(series).m(:,:,slice,frame);
-eigen_val = squeeze(data(series).dti_val(:,:,slice,:));
-eigen_vec = squeeze(data(series).dti_vec(:,:,slice,:,:));
 
 %analyze
 rois = get_rois(image, NUM_ROIS);  %select 4 points surrounding MG muscle
@@ -25,6 +20,7 @@ end
 masks = apply_FA_filter(masks,eigen_val);
 fiber_dirs = get_fiber_dirs(eigen_vec, masks);
 fibers = get_fiber_coords(fiber_dirs, centroids, rois);
+save('fibers.mat','fibers')
 
 
 %display
@@ -35,6 +31,7 @@ subplot(1,3,2)
 show_masks(image, masks)
 subplot(1,3,3)
 show_fibers(image, fibers)
+saveas(gcf,'DTI results.png')
 
     
 function rois = get_rois(image,num_rois)
@@ -118,9 +115,9 @@ for n = size(masks,3):-1:1
     xs = xs(xs~=0);
     ys = ys(ys~=0);
     
-    opp_sign = ys > 0;
-    ys(opp_sign) = ys(opp_sign) .* -1;
-    xs(opp_sign) = xs(opp_sign) .* -1;
+    sign_idx = ys > 0;
+    ys(sign_idx) = ys(sign_idx) .* -1;
+    xs(sign_idx) = xs(sign_idx) .* -1;
     
     fiber_dirs(n,:) = [mean(xs), mean(ys)];
 end
@@ -133,6 +130,7 @@ function fibers = get_fiber_coords(fiber_dirs, centroids, rois)
 %   Generates a long fiber line for each ROI
 %   Intersection of long fiber line and ROI boundary is determined
 %   Note: input and output coords have top-left origins (pixel default)
+
 NUM_PIX = 256;
 
 for n = size(fiber_dirs,1):-1:1
@@ -164,15 +162,9 @@ end
 function show_masks(image, masks)
 % displays masks on image
 %   expects mask matrix is [x y n] where n is the region number
-num_masks = size(masks,3);
+all_masks = logical(sum(masks,3));
+image(all_masks) = max(image(:));
 imshow(image,[])
-hold on
-for n = 1:size(masks,3)
-    m = imshow(masks(:, :, n), []);
-    set(m, 'AlphaData', masks(:,:,n)) %alpha is transparency
-end
-hold off
-title('Masks')
 end
 
 

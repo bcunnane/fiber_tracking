@@ -1,25 +1,21 @@
 %% Processing raw support data
-force = force_data_read();
-fse = dicom_data_read;
-fibers = fiber_data_read();
+home_dir = pwd;
 
-% convert to pixels if mm
-fibers.x = fibers.x / fse.header.PixelSpacing(1);
-fibers.y = fibers.y / fse.header.PixelSpacing(2);
+force_path = uigetdir(home_dir,'Select force data folder');
+name = char(regexp(force_path,'\d{6}-\w{2}\\\w','match'));
+name = strrep(name,'\','-');
+force = force_data_read(force_path);
 
-% resize FSE and fiber points to match dyanimic im size
-num_pix = size(dynamic(1).M,1);
-% fse.image = imresize(fse.image,[num_pix num_pix]);
-fibers.x = round(fibers.x / 2);
-fibers.y = round(fibers.y / 2);
-%% Processing raw CS data
-% import raw p files
-% raw = pfile2struct;
-% 
-% % reconstruct compressed sensing data
-% for i=1:size(raw,2)
-%     dynamic(i) = reconCS(raw(i), 'cs4vps2', i); 
-% end
+fse = dicom_data_read();
+fse.image = imresize(fse.image,[256 256]); % resize FSE to match dynamic
+%fse.image = flip(fse.image,2); % horizontal flip if needed
+%% Processing dyanmic data
+% process dynamic images
+
+for i=1:2
+    dynamic_dir = uigetdir(home_dir,'Select dyanmic data folder');
+    dynamic(i) = recon_fs(dynamic_dir);
+end
 
 % convert from cm/s to mm/s (x10) and negate Vx
 for j = 1:length(dynamic)
@@ -31,7 +27,7 @@ end
 % ensure dynamic & FSE image alignment
 for j = 1:length(dynamic)
     while true
-        imshowpair(dynamic(j).M(:,:,1),imresize(fse.image,[256 256]))
+        imshowpair(dynamic(j).M(:,:,1),fse.image)
         ui_response = questdlg('Images Are Aligned?',...
             'UI Menu',...
             'Looks good','Flip Vertical','Flip Horizontal','Looks good');
@@ -69,9 +65,7 @@ for j=1:length(dynamic)
     end
 end
 %% Save final data
-name = pwd;
-name = strrep(name(end-7:end),'\',' ');
-filename = name + " processed data.mat";
-save(filename, 'name', 'dynamic', 'force', 'fse', 'fibers')
+filename = "processed data.mat";
+save(filename, 'name', 'dynamic', 'force', 'fse')
 
 

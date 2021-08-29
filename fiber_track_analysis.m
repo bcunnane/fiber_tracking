@@ -1,5 +1,5 @@
 %% start up
-load('022621 P processed data.mat')
+load('210811-JH-N processed data.mat')
 
 % constants
 PPF = 2; %points per fiber
@@ -17,7 +17,7 @@ for j = length(dynamic):-1:1
     tform = affine_register(fse.image, dynamic(j).M(:,:,1));
     
     % convert points
-    [reg_x, reg_y]= transformPointsForward(tform, fibers.x, fibers.y);
+    [reg_x, reg_y]= transformPointsForward(tform, fibers(:,1), fibers(:,2));
         
     % calcs
     [results(j).xs,results(j).ys]= track2dv4(reg_x,reg_y,dynamic(j).Vx_SM, dynamic(j).Vz_SM,dt,RES,START_FRAME);
