@@ -1,14 +1,9 @@
-%GET DTI FIBERS 
+function fibers = get_dti_fibers(image, slice, eigen_val, eigen_vec)
 % Determines muscle fibers from MR diffusion data via average direction
 % within a region of interest (ROI)
 
 %load('DTI.mat')
 NUM_ROIS = 3;
-slice = 8; %set so location is same as dynamic
-%image = dynamic(1).M(:,:,1);
-eigen_val = squeeze(DTI_data.DTI_eigenvalue(:,:,slice,:));
-eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,slice,:,:));
-
 
 %analyze
 rois = get_rois(image, NUM_ROIS);  %select 4 points surrounding MG muscle
@@ -32,7 +27,7 @@ show_masks(image, masks)
 subplot(1,3,3)
 show_fibers(image, fibers)
 saveas(gcf,'DTI results.png')
-
+end
     
 function rois = get_rois(image,num_rois)
 % determines 4-point regions of interest (ROIs)
@@ -165,6 +160,7 @@ function show_masks(image, masks)
 all_masks = logical(sum(masks,3));
 image(all_masks) = max(image(:));
 imshow(image,[])
+title('Masks')
 end
 
 

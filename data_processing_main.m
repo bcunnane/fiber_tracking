@@ -1,11 +1,11 @@
-%% Processing raw support data
+%% Processing raw force data
 home_dir = pwd;
-
 force_path = uigetdir(home_dir,'Select force data folder');
 name = char(regexp(force_path,'\d{6}-\w{2}\\\w','match'));
 name = strrep(name,'\','-');
 force = force_data_read(force_path);
-
+%% Processing FSE data
+% get FSE at same location as dynamic scan
 fse = dicom_data_read();
 fse.image = imresize(fse.image,[256 256]); % resize FSE to match dynamic
 %fse.image = flip(fse.image,2); % horizontal flip if needed
@@ -64,8 +64,16 @@ for j=1:length(dynamic)
             dynamic(j).M(:,:,i),num_iter,delta_t, kappa,option);
     end
 end
+%% get DTI fibers
+
+% load dti data
+% set slice so location corresponds to dynamic
+slice = 7; 
+eigen_val = squeeze(DTI_data.DTI_eigenvalue(:,:,slice,:));
+eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,slice,:,:));
+fibers = get_dti_fibers(im, slice, eigen_val, eigen_vec);
 %% Save final data
-filename = "processed data.mat";
-save(filename, 'name', 'dynamic', 'force', 'fse')
+filename = name + " processed data.mat";
+save(filename, 'name', 'dynamic', 'force', 'fse', 'fibers')
 
 

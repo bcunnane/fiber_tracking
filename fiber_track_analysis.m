@@ -1,5 +1,5 @@
 %% start up
-load('210811-JH-N processed data.mat')
+% load('210811-JH-N processed data.mat')
 
 % constants
 PPF = 2; %points per fiber
@@ -17,10 +17,11 @@ for j = length(dynamic):-1:1
     tform = affine_register(fse.image, dynamic(j).M(:,:,1));
     
     % convert points
-    [reg_x, reg_y]= transformPointsForward(tform, fibers(:,1), fibers(:,2));
+    %[reg_x, reg_y]= transformPointsForward(tform, fibers(:,1), fibers(:,2));
         
     % calcs
-    [results(j).xs,results(j).ys]= track2dv4(reg_x,reg_y,dynamic(j).Vx_SM, dynamic(j).Vz_SM,dt,RES,START_FRAME);
+    %[results(j).xs,results(j).ys]= track2dv4(reg_x,reg_y,dynamic(j).Vx_SM, dynamic(j).Vz_SM,dt,RES,START_FRAME);
+    [results(j).xs,results(j).ys]= track2dv4(fibers(:,1),fibers(:,2),dynamic(j).Vx_SM, dynamic(j).Vz_SM,dt,RES,START_FRAME);
     results(j).dxs = results(j).xs(PPF:PPF:end,:)-results(j).xs(1:PPF:end,:);
     results(j).dys = results(j).ys(PPF:PPF:end,:)-results(j).ys(1:PPF:end,:);
     results(j).lengths = sqrt(results(j).dxs.^2 + results(j).dys.^2);

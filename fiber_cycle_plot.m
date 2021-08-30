@@ -1,6 +1,6 @@
 function fiber_cycle_plot(results, force, fse, fibers, plot_title)
 %FIBER_RESULT_PLOT plots mean force, strain, length & angle vs motion cycle
-%   plots mean force, fiber strain, length, & angle averaged for proximal,
+%   plots mean force, fiber strain, length, & angle for proximal,
 %   middle, and distal fibers.
 
 % variables
@@ -21,17 +21,7 @@ reg_key = 'pmd';
 
 plotFig = figure;
 % cycle plots
-regions = fibers.reg(1:2:end);
 for j = 3:-1:1
-    % split data into proximal, middle, and distal regions
-    prox = data(regions == reg_key(1), :, j);
-    midl = data(regions == reg_key(2), :, j);
-    dist = data(regions == reg_key(3), :, j);
-    
-    % average within regions
-    prox = mean(prox, 1);
-    midl = mean(midl, 1);
-    dist = mean(dist, 1);
     
     % create cycle plots
     subplot(2,2,j)
@@ -39,9 +29,9 @@ for j = 3:-1:1
     plot(force_pct, force, 'w')
     ylabel('Force (N)')
     yyaxis right
-    plot(results_pct, prox, ['-',reg_colors(1)],...
-         results_pct, midl, ['-',reg_colors(2)],...
-         results_pct, dist, ['-',reg_colors(3)])
+    plot(results_pct, data(1,:,j), ['-',reg_colors(1)],...
+         results_pct, data(2,:,j), ['-',reg_colors(2)],...
+         results_pct, data(3,:,j), ['-',reg_colors(3)])
     xlabel('Cycle (%)')
     ylabel(char(ylabels(j)))
     ax = gca;
@@ -57,13 +47,8 @@ subplot(2,2,4)
 axis off
 imshow(fse.image,[]);
 hold on
-regions = fibers.reg;
 for r = 1:3
-    xs = fibers.x(regions == reg_key(r));
-    ys = fibers.y(regions == reg_key(r));
-    for j = 1:2:length(xs)-1
-        plot(xs(j:j+1),ys(j:j+1),['-',reg_colors(r)])
-    end
+    plot(fibers(2*r-1:2*r,1), fibers(2*r-1:2*r,2) ,['-',reg_colors(r)])
 end
 sgtitle(["\color{white}" + plot_title, "\color{white} Force, \color{red} Proximal, \color{yellow} Middle, \color{green} Distal"])
 
