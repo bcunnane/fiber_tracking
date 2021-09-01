@@ -8,7 +8,6 @@ force = force_data_read(force_path);
 % get FSE at same location as dynamic scan
 fse = dicom_data_read();
 fse.image = imresize(fse.image,[256 256]); % resize FSE to match dynamic
-%fse.image = flip(fse.image,2); % horizontal flip if needed
 %% Processing dyanmic data
 % process dynamic images
 
@@ -24,28 +23,28 @@ for j = 1:length(dynamic)
     dynamic(j).Vz = 10 * dynamic(j).Vz;
 end
 
-% ensure dynamic & FSE image alignment
-for j = 1:length(dynamic)
-    while true
-        imshowpair(dynamic(j).M(:,:,1),fse.image)
-        ui_response = questdlg('Images Are Aligned?',...
-            'UI Menu',...
-            'Looks good','Flip Vertical','Flip Horizontal','Looks good');
-        switch ui_response
-            case 'Looks good'
-                close all
-                break
-            case 'Flip Vertical'
-                flip_dir=1;
-            case 'Flip Horizontal'
-                flip_dir=2;
-        end
-        dynamic(j).M  = flip(dynamic(j).M,flip_dir);
-        dynamic(j).Vx = flip(dynamic(j).Vx,flip_dir);
-        dynamic(j).Vy = flip(dynamic(j).Vy,flip_dir);
-        dynamic(j).Vz = flip(dynamic(j).Vz,flip_dir);
-    end
-end
+% % ensure dynamic & FSE image alignment
+% for j = 1:length(dynamic)
+%     while true
+%         imshow(dynamic(j).M(:,:,1))
+%         ui_response = questdlg('Images Are Aligned?',...
+%             'UI Menu',...
+%             'Looks good','Flip Vertical','Flip Horizontal','Looks good');
+%         switch ui_response
+%             case 'Looks good'
+%                 close all
+%                 break
+%             case 'Flip Vertical'
+%                 flip_dir=1;
+%             case 'Flip Horizontal'
+%                 flip_dir=2;
+%         end
+%         dynamic(j).M  = flip(dynamic(j).M,flip_dir);
+%         dynamic(j).Vx = flip(dynamic(j).Vx,flip_dir);
+%         dynamic(j).Vy = flip(dynamic(j).Vy,flip_dir);
+%         dynamic(j).Vz = flip(dynamic(j).Vz,flip_dir);
+%     end
+% end
 
 % perform anisotropic smoothing
 num_iter = 10;
@@ -68,10 +67,11 @@ end
 
 % load dti data
 % set slice so location corresponds to dynamic
-slice = 7; 
+slice = 6;
+image = dynamic(1).M(:,:,1);
 eigen_val = squeeze(DTI_data.DTI_eigenvalue(:,:,slice,:));
 eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,slice,:,:));
-fibers = get_dti_fibers(im, slice, eigen_val, eigen_vec);
+fibers = get_dti_fibers(image, eigen_val, eigen_vec);
 %% Save final data
 filename = name + " processed data.mat";
 save(filename, 'name', 'dynamic', 'force', 'fse', 'fibers')

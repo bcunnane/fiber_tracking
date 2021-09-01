@@ -1,71 +1,74 @@
-function fibers = get_dti_fibers(image, slice, eigen_val, eigen_vec)
+function fibers = get_dti_fibers(image, eigen_val, eigen_vec)
 % Determines muscle fibers from MR diffusion data via average direction
 % within a region of interest (ROI)
 
-%load('DTI.mat')
-NUM_ROIS = 3;
-
 %analyze
-rois = get_rois(image, NUM_ROIS);  %select 4 points surrounding MG muscle
-masks = get_masks(rois);
+[mpix, npix] = size(image);
+roi = get_roi(image);
+masks = get_masks(roi, mpix, npix);
 for n = size(masks,3):-1:1
-    c = regionprops(masks(:,:,n),'centroid');
-    centroids(n,:) = [c.Centroid];
+    props = regionprops(masks(:,:,n),'Centroid','Extrema');
+    centroids(n,:) = [props.Centroid];
+    bounds(:,:,n) = props.Extrema;
 end
-masks = apply_FA_filter(masks,eigen_val);
+bounds = [bounds; bounds(1,:,:)]; %close boundaries
+masks = apply_FA_filter(masks ,eigen_val);
 fiber_dirs = get_fiber_dirs(eigen_vec, masks);
-fibers = get_fiber_coords(fiber_dirs, centroids, rois);
-save('fibers.mat','fibers')
-
+fibers = get_fiber_coords(fiber_dirs, centroids, bounds, npix);
+save('DTI_fiber_results.mat','fibers','roi','masks','fiber_dirs')
 
 %display
 figure('Name','DTI Fibers','NumberTitle','off')
+set(gcf, 'Position',  [100, 100, 1200, 400])
 subplot(1,3,1)
-show_rois(image, rois)
+show_rois(image, roi)
 subplot(1,3,2)
 show_masks(image, masks)
 subplot(1,3,3)
 show_fibers(image, fibers)
 saveas(gcf,'DTI results.png')
 end
-    
-function rois = get_rois(image,num_rois)
-% determines 4-point regions of interest (ROIs)
-%   returns ROIs based on 4 point user-determined trapezoidal vertices
-%   points must be selected counter-clockwise starting from top right
-%   returned matrix is [x, y, n] where n is the region number from top
-%   region points are counter-clockwise starting from top right
 
-% get vertices
-figure('Name','Select 4 MG Muscle Points','NumberTitle','off')
+
+function roi = get_roi(image)
+% returns ROI coordinates as [x, y]
 imshow(image,[])
-[vtx(:,1), vtx(:,2)] = ginput(4);
-close('Select 4 MG Muscle Points') 
-
-% split into small areas. matrix is [x y n] where n is base number
-bases(:,2,2) = round(vtx(2,2):abs(vtx(3,2)-vtx(2,2)) / num_rois:vtx(3,2));
-bases(:,1,2) = round(vtx(2,1):abs(vtx(3,1)-vtx(2,1)) / num_rois:vtx(3,1));
-bases(:,2,1) = round(vtx(1,2):abs(vtx(4,2)-vtx(1,2)) / num_rois:vtx(4,2));
-bases(:,1,1) = round(vtx(1,1):abs(vtx(4,1)-vtx(1,1)) / num_rois:vtx(4,1));
-
-% output the regions
-for n = num_rois:-1:1
-    rois(5,:,n) = bases(n,:,1);
-    rois(4,:,n) = bases(n+1,:,1);
-    rois(3,:,n) = bases(n+1,:,2);
-    rois(2,:,n) = bases(n,:,2);
-    rois(1,:,n) = bases(n,:,1);
-end
+polygon = drawpolygon();
+roi = polygon.Position;
+roi = [roi;roi(1,:)]; %close roi by including first point again
+close all
 end
 
 
-function masks = get_masks(rois)
-% returns logical array mask based on each regions of interest and 
-%   expects ROIs matrix is [x, y, n] where n is the region number
+function masks = get_masks(roi, mpix, npix)
+% returns logical array maskS based on region of interest 
+%   expects ROI matrix is [x, y]
+%   returns region masks as [num_pix, num_pix, n] where n is region number
 
-% get region masks
-for n = size(rois,3):-1:1
-    masks(:,:,n) = poly2mask(rois(:,1,n), rois(:,2,n),256,256);
+% get horizontal split lines that divide ROI into 3 approx equal areas
+total_mask = poly2mask(roi(:,1), roi(:,2), mpix, npix);
+tm_props = regionprops(total_mask);
+
+splits(4) = tm_props.BoundingBox(2) + tm_props.BoundingBox(4);
+splits([1 2]) = tm_props.BoundingBox(2); % default (2) to top
+splits(3) = splits(1) + tm_props.BoundingBox(4)/2; %default to middle
+splits = round(splits);
+
+ideal_area = tm_props.Area / 3;
+for j = 1:2
+    area = 0;
+    while area < ideal_area
+        splits(j+1) = splits(j+1) + 1;
+        area = sum(total_mask(splits(j):splits(j+1),:),'all');
+    end
+end
+
+% create masks of 3 individual regions
+masks = zeros(mpix, npix, 3);
+for n = 1:3
+    masks(:,:,n) = total_mask;
+    masks(1:splits(n),:,n) = 0; %zeros above split line
+    masks(splits(n+1):end,:,n) = 0; % zeros below split line
     masks(:,:,n) = bwmorph(masks(:,:,n),'erode'); %remove pix from edges
 end
 end
@@ -119,38 +122,33 @@ end
 end
 
 
-function fibers = get_fiber_coords(fiber_dirs, centroids, rois)
+function fibers = get_fiber_coords(fiber_dirs, centroids, bounds, npix)
 % calculates muscle fiber endpoint coordinates
 %   Normalizes the fiber direction based on largest value
-%   Generates a long fiber line for each ROI
-%   Intersection of long fiber line and ROI boundary is determined
+%   Generates a long fiber line for each region
+%   Intersection of long fiber line and region boundary is determined
 %   Note: input and output coords have top-left origins (pixel default)
 
-NUM_PIX = 256;
-
 for n = size(fiber_dirs,1):-1:1
-    % create long fiber line
+    % create long line segment in direction of fiber
     fiber_dirs(n,:) = fiber_dirs(n,:) ./ max(abs(fiber_dirs(n,:))); %normalize
-    fiber_line(2,:) = centroids(n,:) + fiber_dirs(n,:) .* NUM_PIX;
-    fiber_line(1,:) = centroids(n,:) - fiber_dirs(n,:) .* NUM_PIX;
+    line(2,:) = centroids(n,:) + fiber_dirs(n,:) .* npix;
+    line(1,:) = centroids(n,:) - fiber_dirs(n,:) .* npix;
     
-    % get intercept and save as fiber coordinates
-    [x,y] = polyxpoly(rois(:,1,n),rois(:,2,n),fiber_line(:,1),fiber_line(:,2));
-    fibers(2*n-1:2*n,1:2) = [x,y];
+    % intercept of line segment and region boundary = fiber end points
+    [x,y] = polyxpoly(bounds(:,1,n), bounds(:,2,n), line(:,1), line(:,2));
+    fibers((2*n-1):(2*n),1:2) = [x,y];
 end
 end
 
 
-function show_rois(image,rois)
+function show_rois(image,roi)
 % displays regions of interest on image
-%   expects ROI matrix is [x y n] where n is the region number
-
+%   expects ROI matrix is [x y]
 imshow(image,[])
 hold on
-for n = 1:size(rois,3)
-    plot(rois(:,1,n),rois(:,2,n))
-end
-title('ROIs')
+plot(roi(:,1),roi(:,2),'-oc')
+title('ROI')
 end
 
 

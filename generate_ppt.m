@@ -9,7 +9,7 @@ gifs = dir('*.gif');
 plots = dir('*.png');
 
 % create powerpoint
-ppt = Presentation([name,'.pptx']);
+ppt = Presentation([name,' fiber tracking results.pptx']);
 for n = 1:length(plots)
     
     plt = Picture(plots(n).name);

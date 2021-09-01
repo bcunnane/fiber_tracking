@@ -1,4 +1,4 @@
-function fiber_cycle_plot(results, force, fse, fibers, plot_title)
+function fiber_cycle_plot(results, force, image, fibers, plot_title)
 %FIBER_RESULT_PLOT plots mean force, strain, length & angle vs motion cycle
 %   plots mean force, fiber strain, length, & angle for proximal,
 %   middle, and distal fibers.
@@ -45,7 +45,7 @@ end
 % fiber image
 subplot(2,2,4)
 axis off
-imshow(fse.image,[]);
+imshow(image,[]);
 hold on
 for r = 1:3
     plot(fibers(2*r-1:2*r,1), fibers(2*r-1:2*r,2) ,['-',reg_colors(r)])
