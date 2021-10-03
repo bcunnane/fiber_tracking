@@ -16,6 +16,6 @@ I wrote a script to organize data processing so that the collected data is autom
 
 The fiber endpoints are identified on the first image frame (this may be done manually or by DTI eigenvector analysis). These endpoints are then progressively tracked through each frame using the VEPC veloctiy data. Once the endpoint locations are known, fiber elongation and therefore fiber strain may be calculated for each frame. I also wrote MATLAB functions to automatically create animations of fiber motion and plot strain over the cycle.
 
-[Fiber motion animations]
+[Fiber motion animation example](images/210818-BC-N 29% MVC animation.gif)
 
-[Fiber strain charts]
+[Fiber result plot example](images/210818-BC-N 29% MVC plots.png)
