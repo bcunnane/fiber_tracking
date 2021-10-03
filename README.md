@@ -10,7 +10,7 @@ Data is collected in a 1.5T GE scanner at UC San Diego's Radiology Imaging Labor
 
 Note: discuss MVC 
 
-[Foot Positions](images/foot positions.png)
+![Foot Positions](images/foot positions.png)
 
 # 2. Data processing
 
