@@ -12,9 +12,9 @@ Data is collected in a 1.5T GE scanner at UC San Diego's Radiology Imaging Labor
 
 # 2. Data processing & strain analysis
 
-I wrote several scripts and functions to 
+I wrote a script to organize data processing so that the collected data is automatically saved as MATLAB structures. 
 
-The fiber endpoints are tracked using the VEPC data so that each endpoint's location is known for all frames. These locations are analyzed, and changes in the fiber's length over time are calculatated. The motion of the fiber's endpoints is recorded in a gif animation. 
+The fiber endpoints are identified on the first image frame (this may be done manually or by DTI eigenvector analysis). These endpoints are then progressively tracked through each frame using the VEPC veloctiy data. Once the endpoint locations are known, fiber elongation and therefore fiber strain may be calculated for each frame. I also wrote MATLAB functions to automatically create animations of fiber motion and plot strain over the cycle.
 
 [Fiber motion animations]
 
