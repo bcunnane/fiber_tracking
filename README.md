@@ -1,8 +1,9 @@
-[Home](https://bcunnane.github.io/)
+[Home](https://bcunnane.github.io/)  
+[View Code](https://github.com/bcunnane/fiber_tracking)
 
 ## Muscle fiber strain determined from motion tracking
 
-Muscle fiber strain is important
+Muscle fiber strain represents deformation from stress and is therefore related to the overall force exerted by the muscle. Analyzing muscle fiber strain in young and old patients can reveal differences in deformation for the same amount of relative force. This experiment studies the muscle fiber strain for young and old patients at different foot positions. This project utilized fundamental hardware (foot pedal fixture, data acquisition) and software (data processing, VEPC motion tracking) developed for Malis et al.
 
 ### 1. Data collection
 
@@ -19,3 +20,6 @@ The fiber endpoints are identified on the first image frame (this may be done ma
 ![Fiber motion animation example](images/210818-BC-N 29% MVC animation.gif)
 
 ![Fiber result plot example](images/210818-BC-N 29% MVC plots.png)
+
+## References
+Malis, V. (2020). Study of Human Muscle Structure and Function with Velocity Encoded Phase Contrast and Diffusion Tensor Magnetic Resonance Imaging Techniques. UC San Diego. ProQuest ID: Malis_ucsd_0033D_19166. Merritt ID: ark:/13030/m5tn2jhg. Retrieved from https://escholarship.org/uc/item/9x42v0wq
