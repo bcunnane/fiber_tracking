@@ -1,16 +1,17 @@
-[Home](https://bcunnane.github.io/)    [GitHub repository](https://github.com/bcunnane/fiber_tracking)
+* [Home](https://bcunnane.github.io/)
+* [GitHub repository](https://github.com/bcunnane/fiber_tracking)
 
 # Muscle fiber strain determined from motion tracking
 
 Muscle fiber strain is important
 
-# 1. Data collection
+### 1. Data collection
 
 Data is collected in a 1.5T GE scanner at UC San Diego's Radiology Imaging Laboratory. The patient's dominant leg is positioned on the scanner bed in a foot pedal fixture. The subject is first scanned with a fast spin echo sequence to provide high resolution images of their leg. From these, an optimal slice is chosen for the dynamic imaging. Next, the subjects maximum pressing force is determined. The foot pedal fixture records their maximum pressing force, and the average of 3 trials is set as their maximum voluntary contraction (MVC). The subject is then prompted via projector to repeatedly press their foot with a high or low percentage of MVC, and the dynamic imaging sequence collects velocity encoded phase contrast (VEPC) images of the subjects leg during foot presses. Each press acts as a trigger that is sent to the scanner via the ECG system. This process is repeated for 3 foot positions: dorsiflexion, neutral, and plantar flexion.
 
 ![Foot Positions](images/foot positions.png)
 
-# 2. Data processing & strain analysis
+### 2. Data processing & strain analysis
 
 I wrote a script to organize data processing so that the collected data is automatically saved as MATLAB structures. 
 
