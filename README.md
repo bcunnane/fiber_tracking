@@ -1,6 +1,6 @@
 [Home](https://bcunnane.github.io/)
 
-# Muscle fiber strain determined from motion tracking via VEPC and Dynamic MRI
+# Muscle fiber strain determined from motion tracking
 
 Muscle fiber strain is important
 
