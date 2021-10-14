@@ -3,7 +3,7 @@
 
 ## Muscle fiber strain determined from motion tracking
 
-Muscle fiber strain represents deformation from stress and is therefore related to the overall force exerted by the muscle. Analyzing muscle fiber strain in young and old patients can reveal differences in deformation for the same amount of relative force. This experiment studies the muscle fiber strain for young and old patients at different foot positions. This project is an extension of prior work by Malis (see reference section below) and utilized its hardware (foot pedal fixture, data acquisition) and software (DICOM processing, VEPC motion tracking).
+Muscle fiber strain represents deformation from stress and is therefore related to the overall force exerted by the muscle. Analyzing muscle fiber strain in young and old patients can reveal differences in deformation for the same amount of relative force. This experiment studies the muscle fiber strain for young and old patients in the medial gastrocnemius (MG) muscle at different foot positions. This project is an extension of prior work by Malis (see reference section below) and utilized its hardware (foot pedal fixture, data acquisition) and software (DICOM processing, VEPC motion tracking).
 
 ### 1. Data collection
 
@@ -16,7 +16,7 @@ Data is collected in a 1.5T GE scanner at UC San Diego's Radiology Imaging Labor
 
 I wrote a script to organize data processing so that the collected data is automatically saved as MATLAB structures. 
 
-The fiber endpoints are identified on the first image frame (this may be done manually or by DTI eigenvector analysis). These endpoints are then progressively tracked through each frame using the VEPC velocity data. Once the endpoint locations are known, fiber elongation and therefore fiber strain may be calculated for each frame. I also wrote MATLAB functions to automatically create animations of fiber motion and plot strain over the cycle. The examples below show the results for neutral (N) foot position at 29% MVC for a subject.
+The fiber endpoints are identified on the first image frame (this may be done manually or by [DTI eigenvector analysis](https://bcunnane.github.io/DTI_fibers/)). These endpoints are then progressively tracked through each frame using the VEPC velocity data. Once the endpoint locations are known, fiber elongation and therefore fiber strain may be calculated for each frame. I also wrote MATLAB functions to automatically create animations of fiber motion and plot strain over the cycle. The examples below show the results for neutral (N) foot position at 29% MVC for a subject.
 
 ![Fiber motion animation example](images/210818-BC-N 29% MVC animation.gif)
 > *Proximal, middle, and distal muscle fiber motion across all image frames*
