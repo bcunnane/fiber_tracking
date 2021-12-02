@@ -3,7 +3,7 @@
 
 ## Muscle fiber strain determined from motion tracking
 
-The muscle fiber endpoints determined in 1a are used in an experiment that analyzes MG muscle strain for young and old subjects at different foot positions using 2D dynamic MRI. The subject’s foot is positioned in a foot pedal fixture in the bore of a 1.5T scanner. A projector prompts them to repeatedly press the pedal at different levels of their maximum pressing force while a velocity encoded phase contrast (VEPC) sequence collects dynamic MR data of their calf. This procedure is repeated for high and low pressing forces at three foot positions: dorsiflexion, neutral, and plantar flexion (Figure 1). 
+The muscle fiber endpoints determined in 1a are used in an experiment that analyzes MG muscle strain for young and old subjects at different foot positions using 2D dynamic MRI. The subject’s foot is positioned in a foot pedal fixture in the bore of a 1.5T scanner. A projector prompts them to repeatedly press the pedal at different levels of their maximum voluntary contraction (% MVC) while a velocity encoded phase contrast (VEPC) sequence collects dynamic MR data of their calf. This procedure is repeated for high and low pressing forces at three foot positions: dorsiflexion, neutral, and plantar flexion (Figure 1). 
 
 ![Figure 1](images/Figure 1 Foot positions with angles and moment arms.png)
 > *Figure 1. Large FOV sagittal images of two subjects (top vs bottom row) at foot positions D, N, and P from left to right. The foot angles were measured from horizontal, and the moment arms (ma) were measured from the ankle joint to the Achilles tendon.*
