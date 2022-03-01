@@ -1,79 +1,72 @@
-%% Processing raw force data
+%% Data Processing Main
+% main script for importing and processing ankle angle MG VEPC study data
+% set working directory to subject data folder ie /930312-BC
+%% Import Data
+posn = 'DNP';
+pct = ['50%MVC';'25%MVC'];
 home_dir = pwd;
-force_path = uigetdir(home_dir,'Select force data folder');
-name = char(regexp(force_path,'\d{6}-\w{2}\\\w','match'));
-name = strrep(name,'\','-');
-force = force_data_read(force_path);
-%% Processing FSE data
-% get FSE at same location as dynamic scan
-fse = dicom_data_read();
-fse.image = imresize(fse.image,[256 256]); % resize FSE to match dynamic
-%% Processing dyanmic data
-% process dynamic images
-
-for i=1:2
-    dynamic_dir = uigetdir(home_dir,'Select dyanmic data folder');
-    dynamic(i) = recon_fs(dynamic_dir);
-end
-
-% convert from cm/s to mm/s (x10) and negate Vx
-for j = 1:length(dynamic)
-    dynamic(j).Vx = -10 * dynamic(j).Vx;
-    dynamic(j).Vy = 10 * dynamic(j).Vy;
-    dynamic(j).Vz = 10 * dynamic(j).Vz;
-end
-
-% % ensure dynamic & FSE image alignment
-% for j = 1:length(dynamic)
-%     while true
-%         imshow(dynamic(j).M(:,:,1))
-%         ui_response = questdlg('Images Are Aligned?',...
-%             'UI Menu',...
-%             'Looks good','Flip Vertical','Flip Horizontal','Looks good');
-%         switch ui_response
-%             case 'Looks good'
-%                 close all
-%                 break
-%             case 'Flip Vertical'
-%                 flip_dir=1;
-%             case 'Flip Horizontal'
-%                 flip_dir=2;
-%         end
-%         dynamic(j).M  = flip(dynamic(j).M,flip_dir);
-%         dynamic(j).Vx = flip(dynamic(j).Vx,flip_dir);
-%         dynamic(j).Vy = flip(dynamic(j).Vy,flip_dir);
-%         dynamic(j).Vz = flip(dynamic(j).Vz,flip_dir);
-%     end
-% end
-
-% perform anisotropic smoothing
-num_iter = 10;
-kappa = 2;
-option = 1; 
-delta_t = 1/7;
-num_frames = size(dynamic(j).M,3);
-
-for j=1:length(dynamic)
-    for i=1:num_frames
-        dynamic(j).Vx_SM (:,:,i) = anisodiff2D(dynamic(j).Vx(:,:,i),...
-            dynamic(j).M(:,:,i),num_iter,delta_t, kappa,option);
-        dynamic(j).Vy_SM (:,:,i) = anisodiff2D(dynamic(j).Vy(:,:,i),...
-            dynamic(j).M(:,:,i),num_iter,delta_t, kappa,option);
-        dynamic(j).Vz_SM (:,:,i) = anisodiff2D(dynamic(j).Vz(:,:,i),...
-            dynamic(j).M(:,:,i),num_iter,delta_t, kappa,option);
+dicom_dirs = dir([home_dir,'\','_DICOM']);
+dicom_dirs = {dicom_dirs(4:end).name};
+for k = 2%:3
+    % get force data
+    force_path = [home_dir,'\',posn(k)];
+    temp = force_data_read(force_path);
+    cd(home_dir)
+    
+    % load DTI data
+    load([home_dir,'/DTI_',posn(k)])
+    
+    for s = 1%:2
+        % get name
+        temp(s).ID = char(regexp(force_path,'\d{6}-\w{2}\\\w','match'));
+        temp(s).ID = [strrep(temp(s).ID,'\','-'),' ',pct(s,:)];
+        
+        % get dynamic data
+        series = str2num(temp(s).series_num);
+        dynamic = recon_fs([home_dir,'/_DICOM/',dicom_dirs{series-1}]);
+        
+        % get location information
+        temp(s).loc = dynamic.location;
+        [~,temp(s).slice] = min(abs(DTI_data.location-temp(s).loc));
+        
+        % apply anisotropic smoothing to velocities
+        num_iter = 10;
+        kappa = 2;
+        option = 1;
+        delta_t = 1/7;
+        num_frames = size(dynamic.M,3);
+        for i=1:num_frames
+            dynamic.Vx (:,:,i) = anisodiff2D(dynamic.Vx(:,:,i),...
+                dynamic.M(:,:,i),num_iter,delta_t, kappa,option);
+            dynamic.Vy (:,:,i) = anisodiff2D(dynamic.Vy(:,:,i),...
+                dynamic.M(:,:,i),num_iter,delta_t, kappa,option);
+            dynamic.Vz (:,:,i) = anisodiff2D(dynamic.Vz(:,:,i),...
+                dynamic.M(:,:,i),num_iter,delta_t, kappa,option);
+        end
+        
+        % assign dynamic images to data structure
+        % convert velocities from cm/s to mm/s (x10) and negate Vx
+        temp(s).M = dynamic.M;
+        temp(s).Vx = -10 * dynamic.Vx;
+        temp(s).Vy = 10 * dynamic.Vy;
+        temp(s).Vz = 10 * dynamic.Vz;
     end
+    
+    % get DTI fibers
+    fa_filter = logical(DTI_data.FA(:,:,temp(s).slice) > 0.15);
+    eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,temp(s).slice,:,:));
+    temp(s).fibers = get_dti_fibers(dynamic(1).M(:,:,1), eigen_vec, fa_filter);
+    temp(1).fibers = temp(2).fibers;
+    movefile('DTI results.png',[temp(1).ID(1:11),' DTI results.png'],'f')
 end
-%% get DTI fibers
-
-% load dti data
-% set slice so location corresponds to dynamic
-slice = 6;
-image = dynamic(1).M(:,:,1);
-eigen_val = squeeze(DTI_data.DTI_eigenvalue(:,:,slice,:));
-eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,slice,:,:));
-fibers = get_dti_fibers(image, eigen_val, eigen_vec);
-%% Save final data
-filename = name + " processed data.mat";
-save(filename, 'name', 'dynamic', 'force', 'fse', 'fibers')
-
-
+%% Track Fibers
+RES = 1.1719;
+START_FRAME = 1;
+for k = 1:length(temp)
+    num_frames = size(temp(1).M,3);
+    dt = ones(num_frames-1,1)*0.136;
+    [temp(k).xs, temp(k).ys] = track2dv4(temp(k).fibers(:,1),...
+        temp(k).fibers(:,2), temp(k).Vx, temp(k).Vz, dt, RES, START_FRAME);
+end
+%% Save together
+%data = [data,temp];

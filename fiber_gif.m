@@ -1,7 +1,7 @@
 function fiber_gif(dynamic_mag, xs, ys, gif_title)
 %FIBER_GIF saves .gif animation of fiber motion from dynamic MRI images
 
-dt = .05; %delay time
+dt = .075; %delay time
 num_frames = size(dynamic_mag,3);
 
 gif_title = char(gif_title);

@@ -1,51 +1,61 @@
-%Fiber Track Analysis
-% main analysis file for vepc fiber tracking in MG muscle
-% expects .mat files containing processed vepc data
-% note: create an empty table named T_all before running
+%% Fiber Track Analysis
+% Main analysis script for foot position fiber tracking experiment
+% assumes there are 2 points per fiber
 
-PPF = 2; %points per fiber
-RES = 1.1719;
-START_FRAME = 1;
-
-files = dir('*.mat');
-for n = 1:length(files)
-    load(files(n).name)
-    num_frames = size(dynamic(1).M,3);
-    dt = ones(num_frames-1,1)*0.136;
-    for j = length(dynamic):-1:1
-        % data is proximal middle distal from top to bottom
-        
-        % analysis for all frames
-        [results(j).xs, results(j).ys]= track2dv4(fibers(:,1),fibers(:,2),dynamic(j).Vx_SM, dynamic(j).Vz_SM,dt,RES,START_FRAME);
-        results(j).dxs = results(j).xs(PPF:PPF:end,:) - results(j).xs(1:PPF:end,:);
-        results(j).dys = results(j).ys(PPF:PPF:end,:) - results(j).ys(1:PPF:end,:);
-        results(j).lengths = sqrt(results(j).dxs.^2 + results(j).dys.^2);
-        results(j).slopes = results(j).dys ./ results(j).dxs;
-        results(j).angles = acosd(abs(results(j).dys ./ results(j).lengths)); %to +Y axis
-        results(j).strains = (results(j).lengths - results(j).lengths(:,1)) ./ results(j).lengths(:,1);
-        
-        series_name(j)= string([name,' ',num2str(round(force(j).pcent)),'% MVC']);
-        %fiber_cycle_plot(results(j), force(j).mean, dynamic(j).M(:,:,1), fibers, series_name(j))
-        %fiber_gif(dynamic(j).M, results(j).xs, results(j).ys, series_name(j))
-        
-        % analysis for peak strain
-        series = repmat(series_name(j),3,1);
-        regions = ["proximal";"middle";"distal"];
-        
-        abs_strains = abs(results(j).strains);
-        peak_strains = max(abs_strains,[],2);
-        peak_strain_frames = find(abs_strains == peak_strains);
-        
-        peak_strain_angles = results(j).angles(peak_strain_frames);
-        delta_angles = results(j).angles(:,1) - peak_strain_angles; %degrees
-        
-        peak_strain_lengths = results(j).lengths(peak_strain_frames);
-        delta_lengths = results(j).lengths(:,1) - peak_strain_lengths;
-        pixel_spacing = 1.1719; % from dicom header
-        delta_lengths = delta_lengths * pixel_spacing; % convert to mm
-        
-        T = table(series,regions,peak_strains,delta_angles,delta_lengths);
-        T_all = [T_all; T];
-    end
+%load(all_data.mat)
+pix_spacing = 1.1719; %pixel spacing, conver to mm
+%% Calculations
+for k = length(data):-1:1
+    % fiber tracking calcs
+    dxs = data(k).xs(2:2:end,:) - data(k).xs(1:2:end,2);
+    dys = data(k).ys(2:2:end,:) - data(k).ys(1:2:end,2);
+    data(k).lengths = sqrt(dxs.^2 + dys.^2) * pix_spacing; 
+    data(k).slopes = dys ./ dxs;
+    data(k).angles = acosd(abs(dys ./ data(k).lengths)); %to +Y axis
+    data(k).strains = (data(k).lengths - data(k).lengths(:,1)) ./ data(k).lengths(:,1);
+    
+    % average muscle regions proximal, middle, & distal together
+    data(k).lengths = mean(data(k).lengths);
+    data(k).slopes = mean(data(k).slopes);
+    data(k).angles = mean(data(k).angles); %to +Y axis
+    data(k).strains = mean(data(k).strains);
+    
+    % general calcs
+    data(k).peak_force = max(data(k).mean);
+    [data(k).peak_strain, data(k).ps_idx] = min(data(k).strains);
+    data(k).str_per_force = data(k).peak_strain / data(k).peak_force;
+    
+    data(k).init_ang = data(k).angles(1);
+    data(k).del_ang = data(k).angles(data(k).ps_idx) - data(k).init_ang;
+    
+    data(k).init_len = data(k).lengths(1);
+    data(k).del_len = data(k).lengths(data(k).ps_idx) - data(k).init_len;
 end
+%% Results Table
+results = table;
+results.position = ['D';'D';'N';'N';'P';'P'];
+results.pctMVC = ['50%';'25%';'50%';'25%';'50%';'25%'];
+for k = 1:6
+    results.MVC(k) = mean([data(k:6:end).MVC]);
+    results.peakForce(k) = mean([data(k:6:end).peak_force]);
+    results.PeakStrain(k) = mean([data(k:6:end).peak_strain]);
+    results.StrainPerForce(k) = mean([data(k:6:end).str_per_force]);
+    results.intAng(k) = mean([data(k:6:end).init_ang]);
+    results.delAng(k) = mean([data(k:6:end).del_ang]);
+    results.intLen(k) = mean([data(k:6:end).init_len]);
+    results.delLen(k) = mean([data(k:6:end).del_len]);
+end
+%% Plots
+
+% generate gifs
+% for k = 1:length(data)
+%     fiber_gif(data(k).M, data(k).xs, data(k).ys, data(k).ID)
+%     close
+% end
+
+% generate cycle plots
+% for k = 1:6:length(data)
+%     fiber_cycle_plot(data(k:k+5));
+%     close
+% end
 
