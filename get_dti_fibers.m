@@ -21,15 +21,15 @@ fiber_dirs = get_fiber_dirs(eigen_vec, masks);
 fibers = get_fiber_coords(fiber_dirs, centroids, bounds, npix);
 
 %display
-figure('Name','DTI Fibers','NumberTitle','off')
-set(gcf, 'Position',  [100, 100, 1200, 400])
-subplot(1,3,1)
+t = tiledlayout(1,3);
+nexttile
 show_rois(image, roi)
-subplot(1,3,2)
+nexttile
 show_masks(image, masks)
-subplot(1,3,3)
+nexttile
 show_fibers(image, fibers)
-saveas(gcf,'DTI results.png')
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
 end
 
 
@@ -126,7 +126,7 @@ function show_rois(image,roi)
 %   expects ROI matrix is [x y]
 imshow(image,[])
 hold on
-plot(roi(:,1),roi(:,2),'-oc')
+plot(roi(:,1),roi(:,2),'-c')
 title('ROI')
 end
 
