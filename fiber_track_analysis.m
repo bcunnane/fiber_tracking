@@ -46,16 +46,15 @@ for k = 1:6
     results.delLen(k) = mean([data(k:6:end).del_len]);
 end
 %% Plots
-
 % generate gifs
-% for k = 1:length(data)
-%     fiber_gif(data(k).M, data(k).xs, data(k).ys, data(k).ID)
-%     close
-% end
+for k = 1%:6:length(data)
+    fiber_gif(data(k:k+5))
+    close
+end
 
 % generate cycle plots
-% for k = 1:6:length(data)
-%     fiber_cycle_plot(data(k:k+5));
-%     close
-% end
+for k = 1%:6:length(data)
+    fiber_cycle_plot(data(k:k+5));
+    close
+end
 

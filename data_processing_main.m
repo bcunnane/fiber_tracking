@@ -6,8 +6,8 @@ posn = 'DNP';
 pct = ['50%MVC';'25%MVC'];
 home_dir = pwd;
 dicom_dirs = dir([home_dir,'\','_DICOM']);
-dicom_dirs = {dicom_dirs(4:end).name};
-for k = 2%:3
+dicom_dirs = {dicom_dirs(4:end).name}';
+for k = 3
     % get force data
     force_path = [home_dir,'\',posn(k)];
     temp = force_data_read(force_path);
@@ -16,14 +16,14 @@ for k = 2%:3
     % load DTI data
     load([home_dir,'/DTI_',posn(k)])
     
-    for s = 1%:2
+    for s = 1:2
         % get name
         temp(s).ID = char(regexp(force_path,'\d{6}-\w{2}\\\w','match'));
         temp(s).ID = [strrep(temp(s).ID,'\','-'),' ',pct(s,:)];
         
         % get dynamic data
         series = str2num(temp(s).series_num);
-        dynamic = recon_fs([home_dir,'/_DICOM/',dicom_dirs{series-1}]);
+        dynamic = recon_fs([home_dir,'/_DICOM/',dicom_dirs{series}]);
         
         % get location information
         temp(s).loc = dynamic.location;
@@ -57,7 +57,8 @@ for k = 2%:3
     eigen_vec = squeeze(DTI_data.DTI_eigenvector(:,:,temp(s).slice,:,:));
     temp(s).fibers = get_dti_fibers(dynamic(1).M(:,:,1), eigen_vec, fa_filter);
     temp(1).fibers = temp(2).fibers;
-    movefile('DTI results.png',[temp(1).ID(1:11),' DTI results.png'],'f')
+    saveas(gcf,[temp(1).ID(1:11),' DTI results.png'])
+    close
 end
 %% Track Fibers
 RES = 1.1719;
@@ -67,6 +68,7 @@ for k = 1:length(temp)
     dt = ones(num_frames-1,1)*0.136;
     [temp(k).xs, temp(k).ys] = track2dv4(temp(k).fibers(:,1),...
         temp(k).fibers(:,2), temp(k).Vx, temp(k).Vz, dt, RES, START_FRAME);
+    single_fiber_gif(temp(k).M, temp(k).xs, temp(k).ys, temp(k).ID)
 end
 %% Save together
-%data = [data,temp];
+data = [data,temp];
