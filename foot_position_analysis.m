@@ -1,32 +1,37 @@
 %% main script
 
+%import data
 files = dir('*.dcm');
-
-% import data
-for n = length(files):-1:1
-    data(n).name = files(n).name;
-    data(n).im = dicomread(data(n).name);
-    data(n).info = dicominfo(data(n).name);
+num_files = length(files);
+for n = 13:15%num_files:-1:1
+    ft(n).name = files(n).name(1:11);
+    ft(n).im = dicomread(files(n).name);
+    ft(n).info = dicominfo(files(n).name);
 end
 
-% get moment arms
-% for n = length(files):-1:1
-%     [data(n).ma_im, data(n).ma] = get_moment_arm(data(n).im, data(n).info.PixelSpacing(1),data(n).name);
-%     data(n).ma = data(n).ma * data(n).info.PixelSpacing(1); % convert to mm
-%     ma_ims(:,:,n) = data(n).ma_im;
-% end
-
-% get foot angles
-for n = length(files):-1:1
-    [data(n).fa_im, data(n).fa] = get_foot_angle(data(n).im, data(n).name);
-    fa_ims(:,:,n) = data(n).fa_im;
+%get moment arm (ma) and foot angle (fa) data
+for n = 15%num_files:-1:1
+    [ft(n).ma_pts, ft(n).ma] = get_moment_arm(ft(n).im, ft(n).info.PixelSpacing(1));
+    [ft(n).fa_pts, ft(n).fa] = get_foot_angle(ft(n).im);
 end
 
-save('foot position data.mat','data')
+% display images
+k=1;
+for n = [1:3:num_files,2:3:num_files,3:3:num_files]
+    show_foot_posn(ft(n));
+    fig = getframe(gcf);
+    result_ims(:,:,k) = fig.cdata(:,:,1);
+    k = k+1;
+end
+close
+montage(result_ims,'Size',[3 num_files/3]);
+saveas(gcf,'foot position results.png')
+
+%save('foot position data.mat','ft')
 
 %% functions
 
-function [ma_im, ma] = get_moment_arm(im, pix_spacing, name)
+function [pts, ma] = get_moment_arm(im, pix_spacing)
 % determines moment arm (ma) from user input points
 
 % Instructions for acquiring points
@@ -40,6 +45,7 @@ imshow(im,[])
 ax = gca;
 ax.Toolbar.Visible = 'off';
 pts = ginput(3);
+close
 
 % get line coefficients
 achilles_coeffs = polyfit(pts(1:2,1),pts(1:2,2), 1);
@@ -57,22 +63,11 @@ ma = sqrt( (pts(4,1)-pts(3,1))^2 + (pts(4,2)-pts(3,2))^2);
 ma = ma * pix_spacing; % convert to mm
 ma = round(ma);
 
-% annotate figure
-hold on
-plot(pts(1:2,1),pts(1:2,2),'-ow')
-plot(pts(3:4,1),pts(3:4,2),'-ow')
-text(10,10,name,'Color','white','FontSize',9)
-text(pts(4,1)+10,pts(4,2),['ma = ',num2str(ma),'mm'],'Color','white','FontSize',9)
-
-% save figure
-fig = getframe(gcf);
-ma_im = fig.cdata(:,:,1);
-
 end
 
 
-function [fa_im, fa] = get_foot_angle(im, name)
-% determines foot angle (fa) from user input points
+function [pts, fa] = get_foot_angle(im)
+% determines foot angle (fa) in degrees from user input points
 
 % Instructions for acquiring points
 disp('Identify in order:')
@@ -81,25 +76,36 @@ disp('(2) toe,')
 
 % get user input points
 imshow(im,[])
-ax = gca;
-ax.Toolbar.Visible = 'off';
-pts = ginput(2);
+roi = drawline;
+pts(2:3,:) = roi.Position;
+pts(1,1) = pts(3,1);
+pts(1,2) = pts(2,2);
+close
 
 % get foot angle
-dx = pts(2,1) - pts(1,1);
-dy = pts(2,2) - pts(1,2);
+dx = pts(3,1) - pts(2,1);
+dy = pts(3,2) - pts(2,2);
 fa = atand(dy/dx);
 fa = round(fa);
 
-% annotate figure
-hold on
-plot([pts(1,1) pts(2,1)],[pts(1,2) pts(2,2)],'-w')
-plot([pts(1,1) pts(2,1)],[pts(1,2) pts(1,2)],'-w')
-text(10,10,name,'Color','white','FontSize',9)
-text(pts(1,1)+10,pts(1,2),[num2str(fa),char(176)],'Color','white','FontSize',9)
+end
 
-% save figure
-fig = getframe(gcf);
-fa_im = fig.cdata(:,:,1);
+
+function show_foot_posn(data)
+% show image
+imshow(data.im,[])
+ax = gca;
+ax.Toolbar.Visible = 'off';
+hold on
+text(10,10,data.name,'Color','white','FontSize',9)
+
+% show moment arm
+plot(data.ma_pts(1:2,1),data.ma_pts(1:2,2),'-ow')
+plot(data.ma_pts(3:4,1),data.ma_pts(3:4,2),'-ow')
+text(data.ma_pts(4,1)+10,data.ma_pts(4,2),['ma = ',num2str(data.ma),'mm'],'Color','white','FontSize',9)
+
+% show foot angle
+plot(data.fa_pts(:,1), data.fa_pts(:,2),'-w')
+text(data.fa_pts(2,1)+10,data.fa_pts(2,2),[num2str(data.fa),char(176)],'Color','white','FontSize',9)
 
 end
