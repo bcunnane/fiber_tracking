@@ -22,7 +22,7 @@ for j = [1 3 5]
     title(posn(j))
     xlabel('% Contraction cycle')
     ylabel('\Delta Fiber angle (deg)')
-    ylim([-5 20])
+    ylim([-5 10])
     
     % delta length
     subplot(3,3,n+1)
@@ -45,7 +45,7 @@ for j = [1 3 5]
 end
 
 subplot(3,3,1)
-legend('50% MVC','25% MVC')
+legend('50% MVC','25% MVC','Location','southeast')
 
 saveas(gcf, [data(1).ID(1:9),' plots.png'])
 end
