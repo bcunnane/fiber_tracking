@@ -3,33 +3,32 @@
 % assumes there are 2 points per fiber
 
 %load(all_data.mat)
-pix_spacing = 1.1719; %pixel spacing, conver to mm
 %% Calculations
+pix_spacing = 1.1719; %pixel spacing, to convert to mm
+
 for k = length(data):-1:1
-    % fiber tracking calcs
+    
+    % fiber tracking raw calcs
     dxs = data(k).xs(2:2:end,:) - data(k).xs(1:2:end,:);
     dys = data(k).ys(2:2:end,:) - data(k).ys(1:2:end,:);
-    data(k).lengths = sqrt(dxs.^2 + dys.^2) * pix_spacing; 
+    data(k).lengths = sqrt(dxs.^2 + dys.^2) * pix_spacing;
     data(k).angles = acosd(abs(dys ./ data(k).lengths)); %to +Y axis
-    data(k).strains = (data(k).lengths - data(k).lengths(:,1)) ./ data(k).lengths(:,1);
+    data(k).del_lengths = data(k).lengths - data(k).lengths(:,1);
+    data(k).del_angles = data(k).angles - data(k).angles(:,1);
+    data(k).strains = data(k).del_lengths ./ data(k).lengths(:,1);
     
-    % average muscle regions proximal, middle, & distal together
-    data(k).lengths = mean(data(k).lengths);
-    data(k).angles = mean(data(k).angles); %to +Y axis
-    data(k).strains = mean(data(k).strains);
-    
-    % general calcs
+    % extract desired result values
     data(k).peak_force = max(data(k).mean);
     data(k).peak_torque = data(k).peak_force * data(k).ma * 0.001; %Nm
-    [data(k).peak_strain, data(k).ps_idx] = min(data(k).strains);
+    [data(k).peak_strain, ps_idx] = min(mean(data(k).strains));
     data(k).str_per_force = data(k).peak_strain / data(k).peak_force;
     data(k).str_per_torque = data(k).peak_strain / data(k).peak_torque;
     
-    data(k).init_ang = data(k).angles(1);
-    data(k).del_ang = data(k).angles(data(k).ps_idx) - data(k).init_ang;
+    data(k).init_ang = mean(data(k).angles(:,1));
+    data(k).del_ang = mean(data(k).angles(:,ps_idx)) - data(k).init_ang;
     
-    data(k).init_len = data(k).lengths(1);
-    data(k).del_len = data(k).lengths(data(k).ps_idx) - data(k).init_len;
+    data(k).init_len = mean(data(k).lengths(:,1));
+    data(k).del_len = mean(data(k).lengths(:,ps_idx)) - data(k).init_len;
 end
 %% Result Mean Table
 rslt_means = table;
@@ -73,9 +72,14 @@ end
 %     close
 % end
 
-% generate cycle plots
-for k = 1:6:length(data)
-    fiber_cycle_plot(data(k:k+5));
-    close
-end
+% generate mean fiber cycle plots
+% for k = 1:6:length(data)
+%     fiber_cycle_plot(data(k:k+5));
+%     close
+% end
 
+% generate individual fiber cycle plots
+for k = 1:6:length(data)
+    indiv_fiber_cycle_plot(data(k:k+5));
+    close all
+end
