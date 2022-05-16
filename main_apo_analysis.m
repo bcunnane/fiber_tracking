@@ -1,4 +1,7 @@
 %% main_apo_analysis
+% analysis of medial gastrocnemius (MG) and soleus aponeurosis (apo)
+% sl = soleus apo, dp = MG deep apo, sp = MG superficial apo
+% uses data structure created from main_apo_processing
 
 % create strain distribution plot
 for n = 1%:6:length(data)
@@ -15,22 +18,49 @@ end
 %% functions
 function strain_dist_plot(D)
 
+apo = {'sl','dp','sp'}; % soleus, deep, and superficial apo data
 
-tiledlayout(2,3)
-for n = [1 3 5 2 4 6] % select 50% MVC's first
-    
-    % assumes points are bottom to top
-    ydel(3) = D(n).sp.ys(12,D(n).ps_idx) - D(n).sp.ys(12,1);
-    ydel(2) = D(n).dp.ys(12,D(n).ps_idx) - D(n).dp.ys(12,1);
-    ydel(1) = D(n).sl.ys(12,D(n).ps_idx) - D(n).sl.ys(12,1);
-    
+tiledlayout(2,3,'TileSpacing','tight')
+for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
+
     nexttile
-    plot(D(n).sl.xs(:,1)-80, D(n).sl.ys(:,1),'.-k'...
-        ,D(n).dp.xs(:,1)-80, D(n).dp.ys(:,1),'.-k'...
-        ,D(n).sp.xs(:,1)-80, D(n).sp.ys(:,1),'.-k'...
-        ,D(n).sl.xs(:,D(n).ps_idx)-40, D(n).sl.ys(:,D(n).ps_idx)-ydel(1),'.-b'...
-        ,D(n).dp.xs(:,D(n).ps_idx)-40, D(n).dp.ys(:,D(n).ps_idx)-ydel(2),'.-b'...
-        ,D(n).sp.xs(:,D(n).ps_idx)-40, D(n).sp.ys(:,D(n).ps_idx)-ydel(3),'.-b')
+    for a = 1:3 % num aponeurosis
+        
+        % get strains for peak strain index
+        s = D(n).(apo{a}).strains(:,D(n).ps_idx);
+        
+        % get y delta (peak strain vs frame 1) for point at top of image
+        ydel = D(n).(apo{a}).ys(12,D(n).ps_idx) - D(n).(apo{a}).ys(12,1);
+        
+        % select original (first) frame data
+        og_x = D(n).(apo{a}).xs(:,1) - 80; % 80 pix x offset to center data
+        og_y = D(n).(apo{a}).ys(:,1);
+        
+        % select peak strain frame data
+        ps_x = D(n).(apo{a}).xs(:,D(n).ps_idx) - 40; % 40 pix x offset
+        ps_y = D(n).(apo{a}).ys(:,D(n).ps_idx) - ydel; % 
+        
+        for p = 1:11 % num points
+            % set defaults
+            style = '.-k';
+            width = 0.5;
+            
+            % determine if longer or shorter
+            if s(p) < -0.001
+                style = '.:k';
+            elseif s(p) > 0.001
+                width = 1.5;
+            end
+
+            % plot
+            plot(og_x(p:p+1), og_y(p:p+1),'.-k','LineWidth',0.5,'MarkerSize',8)
+            hold on
+            plot(ps_x(p:p+1), ps_y(p:p+1),style,'LineWidth',width,'MarkerSize',8)
+            hold on
+        end
+    end
+    
+    % plot formating
     axis off
     axis tight
     set(gca,'YDir','reverse')
@@ -38,8 +68,6 @@ for n = [1 3 5 2 4 6] % select 50% MVC's first
     xlim([0 100])
     
 end
-
-
 
 end
 
