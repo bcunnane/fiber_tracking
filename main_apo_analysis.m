@@ -3,59 +3,68 @@
 % sl = soleus apo, dp = MG deep apo, sp = MG superficial apo
 % uses data structure created from main_apo_processing
 
-% create strain distribution plot
-for n = 1%:6:length(data)
+for n = 1:6:length(data)
+    
     strain_dist_plot(data(n:n+5))
+    exportgraphics(gcf,[data(n).ID, ' strain dist plots.png'])
+    close
+    
+    strain_dist_model(data(n:n+5))
+    exportgraphics(gcf,[data(n).ID, ' strain dist model.png'])
+    close
+    
+    apo_gif(data(n:n+5))
 end
 
 
-% % create gifs
-% for n = 1%:6:length(data)
-%     apo_gif(data(n:n+5))
-% end
-
-
 %% functions
-function strain_dist_plot(D)
+function strain_dist_model(D)
+% side-by-side plot of aponeurosis (apo) at rest and peak strain
+% sl = soleus apo, dp = MG deep apo, sp = MG superficial apo
 
-apo = {'sl','dp','sp'}; % soleus, deep, and superficial apo data
+color = 'rgb'; % red = sl, green = dp, blue = sp
 
+figure('Position',[300 100 880 660]);
 tiledlayout(2,3,'TileSpacing','tight')
 for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
-
+    
+    % select data
+    ps_idx = D(n).ps_idx;
+    rs_x = [D(n).sl.xs(:,1), D(n).dp.xs(:,1), D(n).sp.xs(:,1)];
+    rs_y = [D(n).sl.ys(:,1), D(n).dp.ys(:,1), D(n).sp.ys(:,1)];
+    ps_x = [D(n).sl.xs(:,ps_idx), D(n).dp.xs(:,ps_idx), D(n).sp.xs(:,ps_idx)];
+    ps_y = [D(n).sl.ys(:,ps_idx), D(n).dp.ys(:,ps_idx), D(n).sp.ys(:,ps_idx)];
+    
+    % get strains for peak strain index
+    peak_strains = [D(n).sl.strains(:,ps_idx), D(n).dp.strains(:,ps_idx), D(n).sp.strains(:,ps_idx)];
+        
+    % arrange data in plot frame
+    x_offset = 7; % pixels between each aponeurosis representation
+    rs_x = rs_x - min(rs_x(:));
+    ps_x = ps_x - min(ps_x(:)) + max(rs_x(:)) + x_offset;
+    rs_y = rs_y - min(rs_y(:));
+    ps_y = ps_y - min(ps_y(:));    
+    
     nexttile
-    for a = 1:3 % num aponeurosis
-        
-        % get strains for peak strain index
-        s = D(n).(apo{a}).strains(:,D(n).ps_idx);
-        
-        % get y delta (peak strain vs frame 1) for point at top of image
-        ydel = D(n).(apo{a}).ys(12,D(n).ps_idx) - D(n).(apo{a}).ys(12,1);
-        
-        % select original (first) frame data
-        og_x = D(n).(apo{a}).xs(:,1) - 80; % 80 pix x offset to center data
-        og_y = D(n).(apo{a}).ys(:,1);
-        
-        % select peak strain frame data
-        ps_x = D(n).(apo{a}).xs(:,D(n).ps_idx) - 40; % 40 pix x offset
-        ps_y = D(n).(apo{a}).ys(:,D(n).ps_idx) - ydel; % 
-        
-        for p = 1:11 % num points
-            % set defaults
-            style = '.-k';
+    for a = 1:3 % aponeurosis (1)sl (2)dp (3)sp
+        for p = 1:11 % point number in aponeurosis
+            % set default line formatting
+            style = ['.-',color(a)];
             width = 0.5;
             
-            % determine if longer or shorter
-            if s(p) < -0.001
-                style = '.:k';
-            elseif s(p) > 0.001
+            % plot data at rest
+            plot(rs_x(p:p+1,a), rs_y(p:p+1,a),style,'LineWidth',width,'MarkerSize',8)
+            hold on
+            
+            % determine if segment at peak strain is longer or shorter
+            if peak_strains(p,a) < -0.001
+                style = ['.:',color(a)];
+            elseif peak_strains(p,a) > 0.001
                 width = 1.5;
             end
-
-            % plot
-            plot(og_x(p:p+1), og_y(p:p+1),'.-k','LineWidth',0.5,'MarkerSize',8)
-            hold on
-            plot(ps_x(p:p+1), ps_y(p:p+1),style,'LineWidth',width,'MarkerSize',8)
+            
+            % plot data at peak strain
+            plot(ps_x(p:p+1,a), ps_y(p:p+1,a),style,'LineWidth',width,'MarkerSize',8)
             hold on
         end
     end
@@ -64,16 +73,48 @@ for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
     axis off
     axis tight
     set(gca,'YDir','reverse')
-    title(D(n).ID)
-    xlim([0 100])
+    title(D(n).ID(11:end))
+    text(mean(rs_x(:)), max([rs_x(:);rs_y(:)])+10, 'Rest')
+    text(mean(ps_x(:)), max([rs_x(:);rs_y(:)])+10, 'Peak')
     
 end
-
+sgtitle(D(n).ID(1:9))
 end
 
+
+function strain_dist_plot(D)
+% displays the strain in each aponeurosis (apo) segment at the frame of 
+% peak strain
+
+x = 1:11;
+
+figure('Position',[300 100 880 660]);
+tiledlayout(2,3,'TileSpacing','tight')
+for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
+    
+    % create plot
+    nexttile
+    plot(x, D(n).sl.strains(:,D(n).ps_idx),'.-r'...
+        ,x, D(n).dp.strains(:,D(n).ps_idx),'.-g'...
+        ,x, D(n).sp.strains(:,D(n).ps_idx),'.-b')
+    title(D(n).ID(11:end))
+    
+    % annotate plot
+    xlim([0 12])
+    ylim([-.6 .6])
+    xlabel('Segment')
+    ylabel('Strain')
+    if n==1
+        legend('Soleus','Deep','Superficial')
+    end
+    
+end
+sgtitle([D(n).ID(1:9), ' at peak strain'])
+end
 
 
 function apo_gif(D)
+% creates cine gif of aponeurosis (apo) point motion through contraction
 
 dt = .075; %delay time
 num_frames = size(D(1).M,3);

@@ -5,7 +5,7 @@
 
 %load('all_data_with_ma.mat')
 
-for n = 1%:2:length(data)
+for n = 31:2:36
     
     % soleus apo
     start_pts = id_apo(data(n),'id soleus apo');
@@ -39,6 +39,7 @@ start_pts = interparc(12, roi.Position(:,1), roi.Position(:,2), 'spline');
 close
 end
 
+
 function apo = track_apo(D, start_pts)
 % returns tracked locations of aponeurosis outline points
 
@@ -46,12 +47,10 @@ function apo = track_apo(D, start_pts)
 RES = 1.1719;
 START_FRAME = 1;
 PIX_SPACING = 1.1719; %pixel spacing, to convert to mm
-
 num_frames = size(D(1).M,3);
 dt = ones(num_frames-1,1)  *0.136;
 [apo.xs, apo.ys] = track2dv4(start_pts(:,1), start_pts(:,2), ...
     D.Vx, D.Vz, dt, RES, START_FRAME);
-
 
 % calculate
 dxs = apo.xs(2:12,:) - apo.xs(1:11,:);
@@ -60,14 +59,3 @@ apo.lengths = sqrt(dxs.^2 + dys.^2) .* PIX_SPACING;
 apo.strains = (apo.lengths - apo.lengths(:,1)) ./ apo.lengths(:,1);
 
 end
-
-
-
-
-
-
-
-
-
-
-
