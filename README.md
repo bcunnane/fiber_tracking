@@ -1,5 +1,39 @@
 [Home](https://bcunnane.github.io/) • [Code](https://github.com/bcunnane/fiber_tracking)
 
+This experiment studies muscle fiber strains in the medial gastrocnemius (MG) of the human calf at different ankle angles and exertion levels to identify the dependence of muscle force on muscle architecture.
+
+### Collect Data
+Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. A pedal fixture recorded the pressing force of each subject during the study. Several MRI different MRI sequences were utilzed to collect differnt datatypes, including:
+1. Large field of view images to measure the subject's ankle position (see Figure 2)
+2. Multiple slices of high resolution images to scout for an ideal slice with clear fibers
+3. Diffusion images for the chosen slice
+4. Dynamic (i.e. video) velocity images for the chosen slice
+
+![Experimental Setup]
+> *Figure 1. Experimental Setup
+
+![Ankle Angles]
+> *Figure 2. Ankle angle measurements for all subjects
+
+### Identify Muscle Fibers from Diffusion Tensors
+An outline of the MG muscle was manually identified, then split into three equal-size regions: proximal, middle, and distal. Since 
+
+![DTI image]
+
+
+### Track Muscle Fibers and Analyze Changes
+
+![Fiber Gif]
+
+![Result Plot]
+
+### Statistical Analysis and Results
+
+![Table]
+
+
+
+
 ## Muscle fiber strain determined from motion tracking
 
 The muscle fiber endpoints determined in 1a are used in an experiment that analyzes MG muscle strain at different foot positions using 2D dynamic MRI. The subject’s foot is positioned in a foot pedal fixture in the bore of a 1.5T scanner. A projector prompts them to repeatedly press the pedal at different levels of their maximum voluntary contraction (% MVC) while a velocity encoded phase contrast (VEPC) sequence collects dynamic MR data of their calf. This procedure is repeated for high and low pressing forces at three foot positions: dorsiflexion, neutral, and plantar flexion (Figure 1). 
