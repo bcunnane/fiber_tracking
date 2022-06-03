@@ -22,14 +22,20 @@ Diffusion tensors are calculated from the diffusion images. Since the primary di
 > * DTI image
 
 ### Track Muscle Fibers and Analyze Changes
+The endpoints of the DTI-identified muscle fibers were tracked through each frame of the dynamic study (See Figure 4). Changes in fiber angle were calculated with respect to the vertical in the image. Changes in fiber length were calculated with respect to initial length, leading to changes in Lagrangian strain. The results of the three muscle fibers were averaged together (see Figure 5). 
 
 ![Fiber Gif]
+> *Figure 4. *Figure 2. Average muscle fibers identified from diffusion tensor data for the proximal, middle, and distal regions of the MG muscle. Cine image shows change in fiber length and angle over contraction cycle for all exertion levels and ankle angles of a single subject.
 
 ![Result Plot]
+> *Figure 5. Change in fiber angle, length, and strain vs temporal cycle for the three foot positions. Determined from tracking change in position of the DTI-identified fibers throughout the muscle contraction cycle. The results for the fibers in the proximal, middle, and distal regions of the MG muscle were averaged for each percent MVC.*
 
 ### Statistical Analysis and Results
+Table 1 shows the averages and standard deviations (in brackets) of the results across all subject. Significant differences in outcomes for the particular foot angles and submaximal force levels were assessed using two-way analysis of variance (ANOVA) and paired t-testing.
+
 
 ![Table]
+> *Table 1. Averaged and standard deviation (in brackets) MG muscle fiber tracking results for all subjects at high and low percentages of MVC for the three foot positions.
 
 
 
@@ -51,6 +57,3 @@ I assisted in data collection and wrote a MATLAB script to organize fiber tracki
 
 ![Table 1](images/Figure 4 average data table.PNG)
 > *Table 1. Averaged MG muscle fiber tracking results for all subjects at high and low percentages of MVC for the three foot positions.*
-
-## References
-Malis, V. (2020). Study of Human Muscle Structure and Function with Velocity Encoded Phase Contrast and Diffusion Tensor Magnetic Resonance Imaging Techniques. UC San Diego. ProQuest ID: Malis_ucsd_0033D_19166. Merritt ID: ark:/13030/m5tn2jhg. Retrieved from https://escholarship.org/uc/item/9x42v0wq
