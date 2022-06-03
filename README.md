@@ -3,7 +3,7 @@
 This experiment studies muscle fiber strains in the medial gastrocnemius (MG) of the human calf at different ankle angles and exertion levels to identify the dependence of muscle force on muscle architecture.
 
 ### Collect Data
-Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. A pedal fixture recorded the pressing force of each subject during the study. Several MRI different MRI sequences were utilzed to collect differnt datatypes, including:
+Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. The subject’s foot is positioned in a foot pedal fixture that records their pressing force. A projector prompts them to repeatedly press the pedal at a certain percentage of their maximum voluntary contraction (% MVC). This procedure is repeated for high (50% MVC) and low (25% MVC) pressing forces at three foot positions: dorsiflexion, neutral, and plantar flexion. Several different MRI sequences were utilzed to collect different image types, including:
 1. Large field of view images to measure the subject's ankle position (see Figure 2)
 2. Multiple slices of high resolution images to scout for an ideal slice with clear fibers
 3. Diffusion images for the chosen slice
@@ -16,10 +16,10 @@ Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. A 
 > *Figure 2. Ankle angle measurements for all subjects
 
 ### Identify Muscle Fibers from Diffusion Tensors
-An outline of the MG muscle was manually identified, then split into three equal-size regions: proximal, middle, and distal. Since 
+Diffusion tensors are calculated from the diffusion images. Since the primary direction of water diffusion within skeletal muscle is along the muscle fiber, the diffusion tensor's principal eigenvector follows the muscle fiber's direction. An outline of the MG muscle was manually identified, then split into three equal-size regions: proximal, middle, and distal. Then the principal eigenvectors in each region were extracted and averaged to form representative fibers (see Figure 3).
 
 ![DTI image]
-
+> * DTI image
 
 ### Track Muscle Fibers and Analyze Changes
 
