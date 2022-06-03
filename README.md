@@ -13,7 +13,7 @@ Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. Th
 > *Figure 1. Experimental Setup*
 
 ![Ankle Angles](files/Foot Angles.png)
-> *Figure 2. Ankle angle measurements for all subjects*
+> *Figure 2. Ankle angle measurements for all subjects. Top row shows dorsiflexion, middle shows neutral, and bottom shows plantar flextion.*
 
 ### Identify Muscle Fibers from Diffusion Tensors
 Diffusion tensors are calculated from the diffusion images. Since the primary direction of water diffusion within skeletal muscle is along the muscle fiber, the diffusion tensor's principal eigenvector follows the muscle fiber's direction. An outline of the MG muscle was manually identified, then split into three equal-size regions: proximal, middle, and distal. Then the principal eigenvectors in each region were extracted and averaged to form representative fibers (see Figure 3).
