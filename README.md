@@ -10,7 +10,7 @@ Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. Th
 4. Dynamic (i.e. video) velocity images for the chosen slice
 
 ![Experimental Setup](files/Research experimental setup.png)
-> *Figure 1. Experimental Setup
+> *Figure 1. Experimental Setup*
 
 ![Ankle Angles](files/Foot Angles.png)
 > *Figure 2. Ankle angle measurements for all subjects
