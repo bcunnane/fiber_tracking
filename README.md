@@ -1,5 +1,4 @@
-[Home](https://bcunnane.github.io/)  
-[View Code](https://github.com/bcunnane/fiber_tracking)
+[Home](https://bcunnane.github.io/) • [Code](https://github.com/bcunnane/fiber_tracking)
 
 ## Muscle fiber strain determined from motion tracking
 
