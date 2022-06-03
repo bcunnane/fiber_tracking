@@ -24,7 +24,7 @@ Diffusion tensors are calculated from the diffusion images. Since the primary di
 ### Track Muscle Fibers and Analyze Changes
 The endpoints of the DTI-identified muscle fibers were tracked through each frame of the dynamic study (See Figure 4). Changes in fiber angle were calculated with respect to the vertical in the image. Changes in fiber length were calculated with respect to initial length, leading to changes in Lagrangian strain. The results of the three muscle fibers were averaged together (see Figure 5). 
 
-![Fiber Gif](files/220311-BC animation resized.gif)
+![Fiber Gif](files/220311-BC animation.gif)
 > *Figure 4. Average muscle fibers identified from diffusion tensor data for the proximal, middle, and distal regions of the MG muscle. Cine image shows change in fiber length and angle over contraction cycle for all exertion levels and ankle angles of a single subject.*
 
 ![Result Plot](files/Temporal Plots.png)
