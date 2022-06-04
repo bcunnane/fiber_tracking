@@ -1,6 +1,6 @@
 [Home](https://bcunnane.github.io/) • [Code](https://github.com/bcunnane/fiber_tracking)
 
-This experiment studies muscle fiber strains in the medial gastrocnemius (MG) of the human calf at different ankle angles and exertion levels to identify the dependence of muscle force on muscle architecture.
+This project develops MRI image processing methods to study muscle fiber strains in the medial gastrocnemius (MG) of the human calf. Specifically, it examines the effects of different ankle angles and exertion levels to identify the dependence of muscle force on muscle architecture.
 
 ### Collect Data
 Data was collected for 6 subjects in a 1.5T MRI scanner as shown in Figure 1. The subject’s foot is positioned in a foot pedal fixture that records their pressing force. A projector prompts them to repeatedly press the pedal at a certain percentage of their maximum voluntary contraction (% MVC). This procedure is repeated for high (50% MVC) and low (25% MVC) pressing forces at three foot positions: dorsiflexion, neutral, and plantar flexion. Several different MRI sequences were utilzed to collect different image types, including:
