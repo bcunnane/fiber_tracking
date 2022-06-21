@@ -20,15 +20,17 @@ for k = length(data):-1:1
     % extract desired result values
     data(k).peak_force = max(data(k).mean);
     data(k).peak_torque = data(k).peak_force * data(k).ma * 0.001; %Nm
-    [data(k).peak_strain, data(k).ps_idx] = min(mean(data(k).strains));
+    [data(k).peak_strain, data(k).ps_idx] = min(data(k).strains,[],2);
     data(k).str_per_force = data(k).peak_strain / data(k).peak_force;
     data(k).str_per_torque = data(k).peak_strain / data(k).peak_torque;
     
-    data(k).init_ang = mean(data(k).angles(:,1));
-    data(k).del_ang = mean(data(k).angles(:,data(k).ps_idx)) - data(k).init_ang;
+    data(k).init_ang = data(k).angles(:,1);
+    data(k).init_len = data(k).lengths(:,1);
+    for f = 1:3
+        data(k).del_ang(f,1) = data(k).angles(f,data(k).ps_idx(f,1)) - data(k).init_ang(f,1);
+        data(k).del_len(f,1) = data(k).lengths(f,data(k).ps_idx(f,1)) - data(k).init_len(f,1);
+    end
     
-    data(k).init_len = mean(data(k).lengths(:,1));
-    data(k).del_len = mean(data(k).lengths(:,data(k).ps_idx)) - data(k).init_len;
 end
 %% Result Mean Table
 rslt_means = table;
@@ -78,34 +80,60 @@ end
 %     close
 % end
 
-%% Statistics
+%% 3-way anova
 
-ps = table;
-ps.fields = {'peak_force','peak_torque','peak_strain','str_per_force'...
-    ,'str_per_torque','init_ang','del_ang','init_len','del_len'}';
+% setup data
+p = table;
+p.fields = {'peak_strain','str_per_force','str_per_torque',...
+    'init_ang','del_ang','init_len','del_len'}';
+pct_mvc = repmat({'50';'50';'50';'25';'25';'25'},18,1);
+posn = repmat('DDDDDDNNNNNNPPPPPP',1,6)';
+fiber = repmat({'Pr';'Mi';'Di'},36,1);
 
-for k = 1:length(ps.fields)
+tiledlayout(2,4)
+for k=1:length(p.fields)
     
-    % prepare data
-    %        D  N  P
-    % 50%MVC
-    % 25%MVC
-    stat_data = [[data(1:6:end).(ps.fields{k})]',[data(3:6:end).(ps.fields{k})]',[data(5:6:end).(ps.fields{k})]'...
-        ;[data(2:6:end).(ps.fields{k})]',[data(4:6:end).(ps.fields{k})]',[data(6:6:end).(ps.fields{k})]'];
+    % p value determiniation
+    y = cat(1,data.(p.fields{k}));
+    p_vals = anovan(y,{pct_mvc,posn,fiber},'varnames',{'%mvc','posn','fiber'},'display','off');
+    p.mvc(k) = p_vals(1);
+    p.posn(k) = p_vals(2);
+    p.fiber(k) = p_vals(3);
     
-    % 2 way ANOVA: 2 factors (Foot position, % MVC) & 6 reps
-    [p,~,~] = anova2(stat_data,6);
-    close
-    ps.anova_mvc(k) = p(2);
-    ps.anova_pos(k) = p(1);
-    
-    % paired t tests for DNP
-    [~,ps.t_dn(k)] = ttest(stat_data(:,1), stat_data(:,2));
-    [~,ps.t_np(k)] = ttest(stat_data(:,2), stat_data(:,3));
-    [~,ps.t_dp(k)] = ttest(stat_data(:,1), stat_data(:,3));
+    % qq plot
+    nexttile
+    qqplot(y)
+    title(strrep(p.fields{k},'_',' '))
         
 end
+%sgtitle('qq plots: individual fibers')
+%% MVC data
+mvc = [data.MVC];
 
+% sort MVC into (1)D, (2)N, & (3)P
+col = 1;
+for n = [1,3,5]
+    posn_mvc(:, col) = mvc(n:6:end);
+    col = col+1;
+end
+
+% normal qq plots
+p = 'DNP';
+tiledlayout(1,3)
+for col = 1:3
+    nexttile
+    qqplot(posn_mvc(:,col))
+    title([p(col),' MVC normal qq plot'])
+end
+
+% get means & stds
+mvc_stats(1,:) = mean(posn_mvc);
+mvc_stats(2,:) = std(posn_mvc);
+
+% paired t tests
+[~, p_dn] = ttest(posn_mvc(:,1), posn_mvc(:,2));
+[~, p_np] = ttest(posn_mvc(:,2), posn_mvc(:,3));
+[~, p_dp] = ttest(posn_mvc(:,1), posn_mvc(:,3));
 
 
 

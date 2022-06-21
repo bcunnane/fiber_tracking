@@ -5,7 +5,7 @@
 
 %load('all_data_with_ma.mat')
 
-for n = 31:2:36
+for n = 19:2:24
     
     % soleus apo
     start_pts = id_apo(data(n),'id soleus apo');

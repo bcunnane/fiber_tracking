@@ -3,19 +3,40 @@
 % sl = soleus apo, dp = MG deep apo, sp = MG superficial apo
 % uses data structure created from main_apo_processing
 
+%% Individual subject Analysis
 for n = 1:6:length(data)
     
-    strain_dist_plot(data(n:n+5))
-    exportgraphics(gcf,[data(n).ID, ' strain dist plots.png'])
-    close
+%     strain_dist_plot(data(n:n+5))
+%     exportgraphics(gcf,[data(n).ID, ' strain dist plots.png'])
+%     close
     
-    strain_dist_model(data(n:n+5))
-    exportgraphics(gcf,[data(n).ID, ' strain dist model.png'])
-    close
+%     strain_dist_model(data(n:n+5))
+%     exportgraphics(gcf,[data(n).ID, ' strain dist model.png'])
+%     close
     
-    apo_gif(data(n:n+5))
+%     apo_gif(data(n:n+5))
 end
 
+%% Averaged subject analysis
+for n = 1:6
+    % create temporary data sructures
+    temp = data(n:6:end);
+    sl = [temp.sl];
+    dp = [temp.dp];
+    sp = [temp.sp];
+    
+    % average segments together
+    aves(n).ID = ['DataMeans-', temp(1).ID(11:end)];
+    aves(n).ps_idx = round(mean([temp.ps_idx]));
+    aves(n).sl.strains = mean(cat(3,sl.strains), 3);
+    aves(n).dp.strains = mean(cat(3,dp.strains), 3);
+    aves(n).sp.strains = mean(cat(3,sp.strains), 3);
+    
+end
+% plot average results
+strain_dist_plot(aves)
+exportgraphics(gcf, 'Mean data strain dist model.png')
+close
 
 %% functions
 function strain_dist_model(D)
