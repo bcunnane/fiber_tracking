@@ -1,33 +1,33 @@
-%% main script
+%% Foot Position Analysis
+% determines the foot angle and moment arm of large FOV DICOM images
 
-%import data
+%% Import data
 files = dir('*.dcm');
 num_files = length(files);
-for n = 13:15%num_files:-1:1
-    ft(n).name = files(n).name(1:11);
-    ft(n).im = dicomread(files(n).name);
-    ft(n).info = dicominfo(files(n).name);
+% for n = 16:18%num_files:-1:1
+%     ft(n).name = files(n).name(1:11);
+%     ft(n).im = dicomread(files(n).name);
+%     ft(n).info = dicominfo(files(n).name);
+% end
+
+%% Get foot angle (fa) & moment arm (ma) 
+for n = 18%num_files:-1:1
+    %[ft(n).fa_pts, ft(n).fa] = get_foot_angle(ft(n).im);
+    %[ft(n).ma_pts, ft(n).ma] = get_moment_arm(ft(n).im, ft(n).info.PixelSpacing(1));
 end
 
-%get moment arm (ma) and foot angle (fa) data
-for n = 15%num_files:-1:1
-    [ft(n).ma_pts, ft(n).ma] = get_moment_arm(ft(n).im, ft(n).info.PixelSpacing(1));
-    [ft(n).fa_pts, ft(n).fa] = get_foot_angle(ft(n).im);
-end
-
-% display images
+%% Display images
 k=1;
-for n = [1:3:num_files,2:3:num_files,3:3:num_files]
+for n = 13:15%[1:3:num_files,2:3:num_files,3:3:num_files]
     show_foot_posn(ft(n));
     fig = getframe(gcf);
     result_ims(:,:,k) = fig.cdata(:,:,1);
     k = k+1;
 end
 close
-montage(result_ims,'Size',[3 num_files/3]);
+montage(result_ims,'Size',[1 3])%[3 num_files/3]);
 saveas(gcf,'foot position results.png')
-
-%save('foot position data.mat','ft')
+saveas(gcf,'foot position results','epsc')
 
 %% functions
 
@@ -97,15 +97,18 @@ imshow(data.im,[])
 ax = gca;
 ax.Toolbar.Visible = 'off';
 hold on
-text(10,10,data.name,'Color','white','FontSize',9)
+%text(10,10,data.name,'Color','white','FontSize',9)
 
 % show moment arm
 plot(data.ma_pts(1:2,1),data.ma_pts(1:2,2),'-ow')
 plot(data.ma_pts(3:4,1),data.ma_pts(3:4,2),'-ow')
-text(data.ma_pts(4,1)+10,data.ma_pts(4,2),['ma = ',num2str(data.ma),'mm'],'Color','white','FontSize',9)
+%text(data.ma_pts(4,1)+10,data.ma_pts(4,2),['ma = ',num2str(data.ma),'mm'],'Color','white','FontSize',9)
+text(data.ma_pts(1,1) + 6, data.ma_pts(1,2) - 7, '1', 'Color','white','FontSize',10)
+text(data.ma_pts(2,1) + 8, data.ma_pts(2,2) - 5, '2', 'Color','white','FontSize',10)
+text(data.ma_pts(3,1) - 17, data.ma_pts(3,2) - 5, '3', 'Color','white','FontSize',10)
 
 % show foot angle
 plot(data.fa_pts(:,1), data.fa_pts(:,2),'-w')
-text(data.fa_pts(2,1)+10,data.fa_pts(2,2),[num2str(data.fa),char(176)],'Color','white','FontSize',9)
+text(data.fa_pts(2,1)+8,data.fa_pts(2,2),[num2str(data.fa),char(176)],'Color','white','FontSize',10)
 
 end

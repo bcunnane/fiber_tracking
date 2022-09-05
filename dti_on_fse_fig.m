@@ -25,6 +25,7 @@ fse_win(:,:,2) = N;
 fse_win(:,:,3) = P;
 
 %% Plot fibers
+ims = [];
 for p = 1:3
     
     xs = fibers(:,1,p);
@@ -34,13 +35,28 @@ for p = 1:3
     imshow(fse_win(:,:,p),[])
     hold on
     
+    % plot DTI fibers
     for j = 1:2:length(xs)-1
-        plot(xs(j:j+1),ys(j:j+1),'-w','LineWidth',2)
+        plot(xs(j:j+1),ys(j:j+1),'--g','LineWidth',2)
+    end
+    
+    % add arrows
+    clr = 'green';
+    fs = 24;
+    if p == 1
+        text(275, 170, '→', 'Color',clr,'FontSize',fs,'FontWeight','bold')
+        text(295, 255, '→', 'Color',clr,'FontSize',fs,'FontWeight','bold')
+    elseif p == 2
+        text(270, 155, '→', 'Color',clr,'FontSize',fs,'FontWeight','bold')
+        text(290, 250, '→', 'Color',clr,'FontSize',fs,'FontWeight','bold')
+    else
+        text(290, 270, '→', 'Color',clr,'FontSize',fs,'FontWeight','bold')
     end
     
     % store image
-    temp_im = frame2im(getframe(gcf));
-    ims(:,:,p) = temp_im(:,:,1);
+    ims = cat(2, ims, frame2im(getframe(gcf)));
 end
 close
-montage(ims,'Size',[1 3])
+imshow(ims)
+saveas(gcf, 'Figure 2.png')
+saveas(gcf,'Figure 2','epsc')

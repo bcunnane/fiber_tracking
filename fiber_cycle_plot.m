@@ -49,5 +49,4 @@ end
 subplot(3,3,1)
 legend('50% MVC','25% MVC','Location','best')
 
-saveas(gcf, [data(1).ID(1:9),' plots.png'])
 end

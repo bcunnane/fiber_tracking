@@ -18,7 +18,7 @@ for f = 1:num_frames
         for j = [1 3 5]
             plot(data(n).xs(j:j+1,f),data(n).ys(j:j+1,f),'-w','LineWidth',1)
         end
-        text(0, 245, data(n).ID, 'Color', 'w');
+        text(0, 245, data(n).ID(11:end), 'Color', 'w');
         
         % store image
         temp_im = frame2im(getframe(gcf));

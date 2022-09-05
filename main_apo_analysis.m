@@ -4,18 +4,20 @@
 % uses data structure created from main_apo_processing
 
 %% Individual subject Analysis
-for n = 1:6:length(data)
-    
-%     strain_dist_plot(data(n:n+5))
-%     exportgraphics(gcf,[data(n).ID, ' strain dist plots.png'])
-%     close
-    
+% for n = 1:6:length(data)
+%     
+% %     strain_dist_plot(data(n:n+5))
+% %     exportgraphics(gcf,[data(n).ID, ' strain dist plots.png'])
+% %     close
+%     
 %     strain_dist_model(data(n:n+5))
-%     exportgraphics(gcf,[data(n).ID, ' strain dist model.png'])
-%     close
-    
-%     apo_gif(data(n:n+5))
-end
+% %     exportgraphics(gcf,[data(n).ID, ' strain dist model.png'])
+% %     saveas(gcf,'Figure 4a.png')
+% %     saveas(gcf,'Figure 4a','epsc')
+%     
+%     
+% %     apo_gif(data(n:n+5))
+% end
 
 %% Averaged subject analysis
 for n = 1:6
@@ -34,11 +36,82 @@ for n = 1:6
     
 end
 % plot average results
-strain_dist_plot(aves)
-exportgraphics(gcf, 'Mean data strain dist model.png')
-close
+strain_dist_bar(aves)
+saveas(gcf,'Figure 4b.png')
+saveas(gcf,'Figure 4b','epsc')
 
+
+%% Statistics
+
+% data setup
+apo = ['sl';'dp';'sp'];
+anova = table;
+anova.vars = {'%mvc';'posn';'seg'};
+str.sl = [];
+str.dp = [];
+str.sp = [];
+pct_mvc = repmat([repmat(50,11,1);repmat(25,11,1)],18,1);
+posn = repmat([repmat('D',22,1); repmat('N',22,1); repmat('P',22,1)],6,1);
+seg = repmat((1:11)',36,1);
+for n = 1:length(data)
+    str.sl = [str.sl; data(n).sl.strains(:,data(n).ps_idx)];
+    str.dp = [str.dp; data(n).dp.strains(:,data(n).ps_idx)];
+    str.sp = [str.sp; data(n).sp.strains(:,data(n).ps_idx)];
+end
+
+% ANOVA
+for a = 1:3
+    anova.(apo(a,:)) = anovan(str.(apo(a,:)),{pct_mvc,posn,seg}...
+        ,'varnames',{'%mvc','posn','seg'},'display','off');
+end
+
+% paired t-tests
+ttable = table;
+ttable.seg = (1:11)';
+for a = 1:3
+    for s = 1:11
+        [~, ttable.([apo(a,:),'_DN'])(s)] = ttest(str.(apo(a,:))(seg==s & posn=='D'), str.(apo(a,:))(seg==s & posn=='N'));
+        [~, ttable.([apo(a,:),'_NP'])(s)] = ttest(str.(apo(a,:))(seg==s & posn=='N'), str.(apo(a,:))(seg==s & posn=='P'));
+        [~, ttable.([apo(a,:),'_DP'])(s)] = ttest(str.(apo(a,:))(seg==s & posn=='D'), str.(apo(a,:))(seg==s & posn=='P'));
+    end
+end
 %% functions
+
+function strain_dist_bar(D)
+% displays the strain in each aponeurosis (apo) segment at the frame of 
+% peak strain as a vertical bar graph
+
+figure('Position',[300 100 880 660]);
+tiledlayout(2,3,'TileSpacing','compact', 'Padding', 'compact')
+for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
+    
+    % arrange strain data at peak contraction for bar chart
+    y = [D(n).sl.strains(:,D(n).ps_idx)...
+        ,D(n).dp.strains(:,D(n).ps_idx)...
+        ,D(n).sp.strains(:,D(n).ps_idx)];
+    y = flip(y,1); % distal at top of matrix, proximal at bottom
+    
+    % create chart
+    nexttile
+    b = barh(y,'hist');
+    b(1).FaceColor = 'r';
+    b(2).FaceColor = 'g';
+    b(3).FaceColor = 'b';
+    title(D(n).ID(11:end))
+    
+    % format plot
+    xlabel('Strain')
+    ylabel('(Distal)          Segment        (Proximal)')
+    yticklabels({'11','10','9','8','7','6','5','4','3','2','1'})
+    xlim([-.4 .1])
+    if n==1
+        legend('Soleus','Deep','Superficial','Location','best')
+    end
+    
+end
+end
+
+
 function strain_dist_model(D)
 % side-by-side plot of aponeurosis (apo) at rest and peak strain
 % sl = soleus apo, dp = MG deep apo, sp = MG superficial apo
@@ -46,7 +119,7 @@ function strain_dist_model(D)
 color = 'rgb'; % red = sl, green = dp, blue = sp
 
 figure('Position',[300 100 880 660]);
-tiledlayout(2,3,'TileSpacing','tight')
+tiledlayout(2,3,'TileSpacing','compact', 'Padding', 'compact')
 for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
     
     % select data
@@ -79,9 +152,9 @@ for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
             
             % determine if segment at peak strain is longer or shorter
             if peak_strains(p,a) < -0.001
-                style = ['.:',color(a)];
-            elseif peak_strains(p,a) > 0.001
                 width = 1.5;
+            elseif peak_strains(p,a) > 0.001
+                style = ['.:',color(a)];
             end
             
             % plot data at peak strain
@@ -99,7 +172,7 @@ for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
     text(mean(ps_x(:)), max([rs_x(:);rs_y(:)])+10, 'Peak')
     
 end
-sgtitle(D(n).ID(1:9))
+%sgtitle(D(n).ID(1:9))
 end
 
 
@@ -110,7 +183,7 @@ function strain_dist_plot(D)
 x = 1:11;
 
 figure('Position',[300 100 880 660]);
-tiledlayout(2,3,'TileSpacing','tight')
+tiledlayout(2,3,'TileSpacing','compact', 'Padding', 'compact')
 for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
     
     % create plot
@@ -122,15 +195,15 @@ for n = [1 3 5 2 4 6] % select 50% MVC's first, then 25%
     
     % annotate plot
     xlim([0 12])
-    ylim([-.6 .6])
+    ylim([-.4 .2])
     xlabel('Segment')
     ylabel('Strain')
     if n==1
-        legend('Soleus','Deep','Superficial')
+        legend('Soleus','Deep','Superficial','Location','southeast')
     end
     
 end
-sgtitle([D(n).ID(1:9), ' at peak strain'])
+%sgtitle([D(n).ID(1:9), ' at peak strain'])
 end
 
 
@@ -154,7 +227,7 @@ for fr = 1:num_frames
         plot(D(n).sl.xs(:,fr), D(n).sl.ys(:,fr),'.-w'...
             ,D(n).dp.xs(:,fr), D(n).dp.ys(:,fr),'.-w'...
             ,D(n).sp.xs(:,fr), D(n).sp.ys(:,fr),'.-w')
-        text(0, 245, D(n).ID, 'Color', 'w');
+        text(0, 245, D(n).ID(11:end), 'Color', 'w');
         
         % store image
         temp_im = frame2im(getframe(gcf));
